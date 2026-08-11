@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ИСТОК: Отзывы, Рецензии и Дистрибьюция</title>
+    <title>ИСТОК: Кузница Миров — Инди-Платформа Веб-Игр</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background: #080b0e; color: #b0c4de; font-family: sans-serif; min-height: 100vh; padding-bottom: 60px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Навигация */
+        /* Верхний навигационный бар ИСТОКА */
         header { width: 100%; background: #0f141c; border-bottom: 2px solid #1e2936; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .logo { font-size: 20px; font-weight: bold; letter-spacing: 3px; color: #fff; text-transform: uppercase; }
-        .logo span { color: #38bdf8; text-shadow: 0 0 10px rgba(56,189,248,0.3); }
+        .logo { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; text-transform: uppercase; }
+        .logo span { color: #38bdf8; text-shadow: 0 0 10px rgba(56,189,248,0.4); }
         
         nav { display: flex; gap: 25px; }
         .nav-link { color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 8px 0; border-bottom: 3px solid transparent; transition: 0.15s; }
         .nav-link:hover, .nav-link.active-tab { color: #fff; border-color: #38bdf8; }
+        
         .auth-widget { font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 15px; background: #1e293b; padding: 6px 15px; border-radius: 6px; border: 1px solid #334155; }
         
         .tab-content { display: none; width: 1100px; max-width: 95%; margin-top: 25px; }
@@ -23,14 +24,14 @@
         .istok-panel { background: #131b26; border: 1px solid #1e2936; border-radius: 8px; padding: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.6); margin-bottom: 20px; }
         .panel-title { font-size: 13px; font-weight: bold; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #1e2936; padding-bottom: 8px; margin-bottom: 20px; }
         .istok-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        .istok-card { background: linear-gradient(135deg, #1e293b 0%, #131b26 100%); border: 1px solid #1e2936; border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: all 0.2s ease; position: relative; }
+        .istok-card { background: linear-gradient(135deg, #1e293b 0%, #131b26 100%); border: 1px solid #1e2936; border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 12px; position: relative; transition: all 0.2s ease; }
         .istok-card:hover { border-color: #38bdf8; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(56,189,248,0.15); }
         
         .card-title { font-size: 18px; font-weight: bold; color: #fff; }
         .card-desc { font-size: 13px; color: #94a3b8; line-height: 1.4; }
         .studio-tag { font-size: 10px; font-weight: bold; color: #eab308; text-transform: uppercase; background: #2c240b; padding: 2px 6px; border-radius: 4px; align-self: flex-start; }
         
-        /* Стили Системы Звезд и Отзывов */
+        /* Стили системы Steam-отзывов */
         .rating-display { font-size: 13px; color: #f1c40f; display: flex; align-items: center; gap: 4px; font-weight: bold; }
         .review-section { background: #0c111a; border-radius: 6px; padding: 10px; margin-top: 5px; border: 1px dashed #1e2936; display: flex; flex-direction: column; gap: 6px; }
         .review-list { max-height: 80px; overflow-y: auto; font-size: 11px; color: #94a3b8; display: flex; flex-direction: column; gap: 4px; }
@@ -56,8 +57,9 @@
     </style>
 </head>
 <body>
+    <!-- ГЛАВНАЯ СТРУКТУРА НАВИГАЦИИ ИСТОК -->
     <header>
-        <div class="logo">🌀 ИСТОК : <span>REVIEWS HUB</span></div>
+        <div class="logo">🌀 ИСТОК : <span>КУЗНИЦА МИРОВ</span></div>
         <nav>
             <div id="tab-link-library" class="nav-link active-tab" onclick="switchTab('library')">Моя Библиотека</div>
             <div id="tab-link-shop" class="nav-link" onclick="switchTab('shop')">Магазин Секторов</div>
@@ -66,10 +68,10 @@
         <div class="auth-widget" id="hub-wallet-bar"><span>Монеты: <b>$0</b></span></div>
     </header>
 
-    <!-- ВКЛАДКА 1: БИБЛИОТЕКА КЛИЕНТА (СЮДА ПОДГРУЖАЮТСЯ ИГРЫ И ИХ ОТЗЫВЫ) -->
+    <!-- ВКЛАДКА 1: БИБЛИОТЕКА ИГР -->
     <div id="tab-library" class="tab-content active-content">
         <div class="istok-panel">
-            <div class="panel-title">Доступные фэнтези миры (Купленные лицензии)</div>
+            <div class="panel-title">Мои Доступные Игры (Купленные лицензии)</div>
             <div class="istok-grid" id="library-apps-container">
                 <!-- Рендерится динамически из внешнего JSON каталога -->
             </div>
@@ -79,7 +81,7 @@
     <!-- ВКЛАДКА 2: МАГАЗИН ИГР -->
     <div id="tab-shop" class="tab-content">
         <div class="istok-panel">
-            <div class="panel-title">Глобальный Маркетплейс ИСТОК: Выкуп Секторов разработчиков</div>
+            <div class="panel-title">Глобальный Маркетплейс: Выкуп Секторов за игровое золото</div>
             <div class="istok-grid" id="shop-apps-container">
                 <!-- Автоматически выводятся платные игры из файла JSON -->
             </div>
@@ -92,7 +94,7 @@
             <div class="panel-title">Авторизация Сводного Профиля</div>
             <div class="auth-box">
                 <input type="text" id="reg-username-input" placeholder="Введите ваш игровой никнейм...">
-                <button class="submit-btn" onclick="handleHubLogin()">Войти в Систему</button>
+                <button class="submit-btn" onclick="handleHubLogin()">Войти в ИСТОК</button>
             </div>
         </div>
 
@@ -101,8 +103,8 @@
             <div class="profile-layout">
                 <div class="avatar-area"><div style="font-size:48px;">🧙‍♂️</div><div id="prof-nickname" style="font-weight:bold; font-size:15px; margin-top:5px;">Пользователь</div></div>
                 <div class="profile-info" style="display:flex; flex-direction:column; gap:12px; width:100%; justify-content:center;">
-                    <div class="info-row"><span>Глобальный кошелек костей:</span><span style="color:#f1c40f; font-weight:bold;" id="prof-gold-display">$0 монеток</span></div>
-                    <div class="info-row"><span>Прошивка Дистрибьютора:</span><span style="color:#22c55e; font-weight:bold;">JSON Reviews Manifest V3</span></div>
+                    <div class="info-row"><span>Глобальный счетчик валюты:</span><span style="color:#f1c40f; font-weight:bold;" id="prof-gold-display">$0 монет</span></div>
+                    <div class="info-row"><span>Платформа авторизации:</span><span style="color:#22c55e; font-weight:bold;">ISTOK World Forge API v3</span></div>
                     <button class="submit-btn" style="width:140px; border-color:#e74c3c; color:#e74c3c; background:none;" onclick="handleHubLogout()">Выйти</button>
                 </div>
             </div>
@@ -136,7 +138,6 @@
         fetchAndRenderCloudCatalog();
     }
 
-    // ДВИЖОК РЕНДЕРА КАТАЛОГА С ИНТЕГРИРОВАННЫМИ РЕЙТИНГАМИ И ОТЗЫВАМИ
     function fetchAndRenderCloudCatalog() {
         let libraryContainer = document.getElementById("library-apps-container");
         let shopContainer = document.getElementById("shop-apps-container");
@@ -151,23 +152,20 @@
             catalogApps.forEach((app) => {
                 let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
                 
-                // Считаем среднюю оценку звёзд для этой игры из памяти устройства
                 let reviewsData = JSON.parse(localStorage.getItem("reviews_" + app.id)) || [
-                    { user: "Бот-Мастер", text: "Отличный D&D баланс 5e!", stars: 5 }
+                    { user: "Бот-Мастер", text: "Отличный D&D баланс механик!", stars: 5 }
                 ];
                 let totalStars = reviewsData.reduce((sum, r) => sum + parseInt(r.stars), 0);
                 let avgStars = (totalStars / reviewsData.length).toFixed(1);
 
-                // Собираем HTML-строку со списком текстовых рецензий
                 let reviewItemsHtml = "";
                 reviewsData.forEach(r => {
                     reviewItemsHtml += `<div class="review-item"><b>${r.user}</b> (${"★".repeat(r.stars)}): ${r.text}</div>`;
                 });
 
                 if (isUnlocked) {
-                    // Игра в БИБЛИОТЕКЕ ИГРОКА + Блок написания отзывов
                     libraryContainer.innerHTML += `
-                        <div class="istok-card" style="cursor:default;" onclick="event.stopPropagation();">
+                        <div class="istok-card" style="cursor:default;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <div class="studio-tag">Студия: ${app.studio}</div>
                                 <div class="rating-display">⭐ ${avgStars} (${reviewsData.length} отзывов)</div>
@@ -175,11 +173,10 @@
                             <div class="card-title" style="margin-top:2px;">${app.title}</div>
                             <div class="card-desc">${app.desc}</div>
                             
-                            <!-- ИНТЕРАКТИВНЫЙ БЛОК НАПИСАНИЯ РЕЦЕНЗИЙ -->
-                            <div class="review-section" onclick="event.stopPropagation();">
+                            <div class="review-section">
                                 <div class="review-list">${reviewItemsHtml}</div>
                                 <div class="review-input-row">
-                                    <input type="text" id="input-text-${app.id}" class="review-input" placeholder="Написать рецензию на игру...">
+                                    <input type="text" id="input-text-${app.id}" class="review-input" placeholder="Написать отзыв на игру...">
                                     <select id="select-stars-${app.id}" class="stars-select">
                                         <option value="5">5 ★</option><option value="4">4 ★</option>
                                         <option value="3">3 ★</option><option value="2">2 ★</option>
@@ -188,11 +185,9 @@
                                     <button class="play-btn" style="padding:4px 10px; font-size:10px;" onclick="submitUserReview('${app.id}')">Отправить</button>
                                 </div>
                             </div>
-
                             <button class="play-btn" style="margin-top:5px;" onclick="location.href='${app.file}'">ИГРАТЬ</button>
                         </div>`;
                 } else {
-                    // Игра закрыта в МАГАЗИНЕ
                     shopContainer.innerHTML += `
                         <div class="istok-card card-locked">
                             <div class="price-tag">🔒 ВЫКУПИТЬ: $${app.price}</div>
@@ -215,34 +210,25 @@
         });
     }
 
-    // ФУНКЦИЯ ОТПРАВКИ ЖИВОГО ОТЗЫВА И ПЕРЕРАСЧЕТА ЗВЕЗД НА ЛЕТУ
     function submitUserReview(appId) {
         let textInput = document.getElementById("input-text-" + appId);
         let starsSelect = document.getElementById("select-stars-" + appId);
-        if(!textInput || !textInput.value.trim()) return alert("❌ Введите текст рецензии!");
+        if(!textInput || !textInput.value.trim()) return alert("❌ Введите текст отзыва!");
 
         let currentUser = localStorage.getItem("tor_logged_user") || "Игрок";
         let reviewsData = JSON.parse(localStorage.getItem("reviews_" + appId)) || [
-            { user: "Бот-Мастер", text: "Отличный D&D баланс 5e!", stars: 5 }
+            { user: "Бот-Мастер", text: "Отличный D&D баланс механик!", stars: 5 }
         ];
 
-        // Заталкиваем новый отзыв в оффлайн-облако
-        reviewsData.push({
-            user: currentUser,
-            text: textInput.value.trim(),
-            stars: parseInt(starsSelect.value)
-        });
-
+        reviewsData.push({ user: currentUser, text: textInput.value.trim(), stars: parseInt(starsSelect.value) });
         localStorage.setItem("reviews_" + appId, JSON.stringify(reviewsData));
-        textInput.value = ""; // Очищаем поле ввода
-        
-        // Мгновенно обновляем интерфейс и пересчитываем рейтинг!
+        textInput.value = ""; 
         fetchAndRenderCloudCatalog();
     }
 
     function buyIstokLicense(gameId, price, event) {
         if(event) event.stopPropagation();
-        if (hubGold < price) return alert("❌ Недостаточно монет! Выиграйте партию в Монополии (+$300 за выигрыш).");
+        if (hubGold < price) return alert("❌ Недостаточно монет! Выигрывайте партии в Монополии (+$300 за победу).");
         
         hubGold -= price;
         localStorage.setItem("istok_unlocked_" + gameId, "true");

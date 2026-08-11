@@ -2,671 +2,216 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ИСТОК</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИСТОК — Игровая платформа</title>
+
+    <!-- Подключаем внешние стили -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Резервные стили на случай, если style.css не загрузился -->
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background: #1b2838; color: #c6d4df; font-family: "Motiva Sans", Arial, sans-serif; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
-        body.light-theme { background: #f5f5f7; color: #1c1c1e; }
-
-        /* Верхняя панель */
-        header { width: 100%; background: #171a21; padding: 0 30px; height: 65px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.6); border-bottom: 1px solid #2a475e; z-index: 100; }
-        body.light-theme header { background: #f0f0f4; border-bottom-color: #d2d2d7; }
-        .logo { font-size: 24px; font-weight: 800; letter-spacing: 2px; color: #fff; text-transform: uppercase; font-family: sans-serif; cursor: pointer; }
-        body.light-theme .logo { color: #1c1c1e; }
-        .logo span { color: #1a9fff; text-shadow: 0 0 10px rgba(26,159,255,0.4); }
-
-        nav { display: flex; gap: 30px; height: 100%; align-items: center; }
-        .nav-link { color: #b8b6b4; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 21px 0; border-bottom: 3px solid transparent; transition: color 0.1s, border-color 0.1s; }
-        .nav-link:hover, .nav-link.active-tab { color: #fff; border-color: #1a9fff; }
-        body.light-theme .nav-link { color: #666; }
-        body.light-theme .nav-link:hover, body.light-theme .nav-link.active-tab { color: #000; border-color: #1a9fff; }
-
-        .wallet-widget { font-size: 12px; background: #222b35; padding: 8px 16px; border-radius: 2px; border: 1px solid #2a3542; display: flex; align-items: center; gap: 10px; color: #66c0f4; font-family: monospace; font-weight: bold; }
-        body.light-theme .wallet-widget { background: #e9e9eb; border-color: #d2d2d7; color: #0066cc; }
-
-        /* Разметка */
-        .steam-main-layout { display: flex; flex: 1; height: calc(100vh - 65px); width: 100vw; }
-        .steam-sidebar { width: 260px; background: #171d25; border-right: 1px solid #233c51; display: flex; flex-direction: column; padding: 15px 10px; gap: 10px; overflow-y: auto; }
-        body.light-theme .steam-sidebar { background: #f0f0f4; border-right-color: #d2d2d7; }
-        .sidebar-search { background: #223246; border: 1px solid #2a475e; border-radius: 3px; padding: 6px 10px; color: #fff; font-size: 12px; outline: none; width: 100%; }
-        body.light-theme .sidebar-search { background: #fff; border-color: #d2d2d7; color: #1c1c1e; }
-
-        .sidebar-section-title { font-size: 10px; font-weight: bold; color: #1a9fff; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
-        body.light-theme .sidebar-section-title { color: #0066cc; }
-
-        .sidebar-list { display: flex; flex-direction: column; gap: 2px; }
-        .sidebar-item { padding: 8px 10px; font-size: 13px; color: #c6d4df; border-radius: 3px; cursor: pointer; transition: 0.1s; display: flex; justify-content: space-between; align-items: center; }
-        body.light-theme .sidebar-item { color: #1c1c1e; }
-        .sidebar-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        body.light-theme .sidebar-item:hover { background: #e5e5ea; color: #000; }
-        .sidebar-item.active-item { background: #1a9fff !important; color: #fff !important; font-weight: bold; }
-        .sidebar-lock-icon { font-size: 10px; opacity: 0.6; }
-
-        .steam-content-window { flex: 1; background: #1b2838; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        body.light-theme .steam-content-window { background: #f5f5f7; }
-
-        .game-hero-banner { background: linear-gradient(180deg, #2a475e 0%, #171d25 100%); border-radius: 4px; padding: 25px; border: 1px solid rgba(255,255,255,0.02); box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 10px; position: relative; }
-        body.light-theme .game-hero-banner { background: linear-gradient(180deg, #e9e9eb 0%, #f5f5f7 100%); border-color: #d2d2d7; }
-
-        .game-hero-title { font-size: 26px; font-weight: bold; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        body.light-theme .game-hero-title { color: #1c1c1e; text-shadow: none; }
-
-        .game-hero-desc { font-size: 13px; color: #acb2b8; line-height: 1.6; max-width: 700px; }
-        body.light-theme .game-hero-desc { color: #555; }
-
-        .studio-badge { font-size: 9px; font-weight: bold; color: #f1c40f; text-transform: uppercase; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 2px; align-self: flex-start; margin-bottom: 2px; }
-        body.light-theme .studio-badge { background: rgba(0,0,0,0.1); }
-
-        .steam-action-bar { background: #171d25; border-radius: 4px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #233c51; margin-top: 5px; }
-        body.light-theme .steam-action-bar { background: #f0f0f4; border-color: #d2d2d7; }
-
-        .price-text { font-size: 18px; font-weight: bold; color: #fff; }
-        body.light-theme .price-text { color: #1c1c1e; }
-
-        .play-btn { background: linear-gradient(to bottom, #a4e02e 0%, #6aa21e 100%); border: none; color: #fff; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-        .play-btn:hover { background: linear-gradient(to bottom, #bbf237 0%, #7dbf22 100%); filter: brightness(1.1); }
-
-        .buy-btn { background: linear-gradient(to bottom, #214b6b 0%, #12293d 100%); border: 1px solid #66c0f4; color: #fff; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; }
-        .buy-btn:hover { background: #2a5b8c; }
-
-        /* Рейтинг */
-        .rating-stars {
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #121826;
+            color: #eee;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        header {
             display: flex;
-            gap: 2px;
-            margin-top: 8px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #0a101c;
+            border-radius: 10px;
+            margin-bottom: 25px;
             font-size: 18px;
-            color: #888;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
-        .rating-stars .star {
-            cursor: pointer;
-            transition: color 0.1s;
+        .logo {
+            font-weight: bold;
+            color: #66c0f4;
+            font-size: 20px;
         }
-        .rating-stars .star:hover,
-        .rating-stars .star.active {
-            color: #fcd34d;
+        .balance {
+            color: #a4e02e;
+            font-weight: bold;
         }
-
-        /* Блок отзывов */
-        .reviews-section { background: #171d25; border-radius: 4px; padding: 20px; border: 1px solid #233c51; margin-top: 15px; }
-        body.light-theme .reviews-section { background: #f0f0f4; border-color: #d2d2d7; }
-
-        .reviews-title { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 15px; }
-        body.light-theme .reviews-title { color: #1c1c1e; }
-
-        .review-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .review-name-input { width: 100%; padding: 8px; border: 1px solid #2a475e; background: #223246; color: #fff; border-radius: 3px; font-size: 13px; }
-        body.light-theme .review-name-input { background: #fff; border-color: #d2d2d7; color: #1c1c1e; }
-
-        .review-textarea { width: 100%; padding: 10px; border: 1px solid #2a475e; background: #223246; color: #fff; border-radius: 3px; font-size: 13px; resize: vertical; min-height: 80px; }
-        body.light-theme .review-textarea { background: #fff; border-color: #d2d2d7; color: #1c1c1e; }
-
-        .submit-review-btn { background: #1a9fff; color: white; border: none; padding: 10px 20px; font-size: 14px; border-radius: 3px; cursor: pointer; align-self: flex-start; }
-        .submit-review-btn:hover { background: #188de0; }
-
-        .reviews-list { display: flex; flex-direction: column; gap: 15px; }
-        .review-item { padding: 12px; background: #1a2530; border-radius: 4px; border-left: 4px solid #1a9fff; }
-        body.light-theme .review-item { background: #e9e9eb; border-left-color: #0066cc; }
-
-        .review-author { font-weight: bold; color: #66c0f4; font-size: 13px; }
-        body.light-theme .review-author { color: #0066cc; }
-
-        .review-date { font-size: 11px; color: #777; margin-top: 4px; }
-        body.light-theme .review-date { color: #888; }
-
-        .review-text { font-size: 13px; color: #c6d4df; margin-top: 8px; line-height: 1.5; }
-        body.light-theme .review-text { color: #555; }
-
-        .review-rating { font-size: 12px; color: #fcd34d; margin-top: 4px; }
-        .review-rating .star { color: #fcd34d; }
-
-        /* Уведомления */
-        .toast-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .game-card {
+            background: #1a2238;
+            border: 1px solid #2a3b50;
+            border-radius: 10px;
+            padding: 18px;
+            transition: transform 0.2s, background 0.3s;
+        }
+        .game-card:hover {
+            transform: translateY(-6px);
+            background: #1e2740;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .game-card h3 {
+            color: #66c0f4;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        .game-card p {
+            color: #9aa7b8;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .price {
+            font-weight: bold;
+            color: #a4e02e;
+        }
+        button {
             background: #1a9fff;
             color: white;
-            padding: 12px 20px;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
             font-size: 14px;
-            z-index: 99999;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            width: 100%;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #188de0;
+        }
+        .status {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #9aa7b8;
+        }
+        .loading {
+            color: #66c0f4;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
+    <!-- Шапка с логотипом и балансом -->
     <header>
-        <div class="logo" onclick="switchSteamTab('store')">🌐 ИС<span>ТОК</span></div>
-        <nav>
-            <div id="tab-link-store" class="nav-link active-tab" onclick="switchSteamTab('store')">Магазин</div>
-            <div id="tab-link-library" class="nav-link" onclick="switchSteamTab('library')">Библиотека</div>
-            <div id="tab-link-sdk" class="nav-link" style="display:none" onclick="switchSteamTab('sdk')">SDK</div>
-            <div id="tab-link-profile" class="nav-link" onclick="switchSteamTab('profile')">Профиль</div>
-        </nav>
-        <button onclick="toggleTheme()" style="background:none;border:none;cursor:pointer;font-size:18px;" title="Сменить тему">🌓</button>
-        <div class="wallet-widget" id="steam-wallet-bar">🪙 БАЛАНС (Гость): <b>$0.00</b></div>
+        <div class="logo">🌐 ИС<span style="color:#1a9fff">ТОК</span></div>
+        <div>🪙 Баланс: <span id="balance">100.00</span> $</div>
     </header>
 
-    <div class="steam-main-layout">
-        <div class="steam-sidebar">
-            <input type="text" id="sidebar-app-search" class="sidebar-search" placeholder="Поиск игры..." oninput="refreshSteamUI()">
-            <select id="genre-filter" class="sidebar-search" onchange="refreshSteamUI()">
-                <option value="">Все жанры</option>
-                <option value="стратегия">Стратегия</option>
-                <option value="песочница">Песочница</option>
-                <option value="RPG">RPG</option>
-                <option value="симулятор">Симулятор</option>
-                <option value="аркада">Аркада</option>
-            </select>
-            <div class="sidebar-section-title">ИГРЫ</div>
-            <div class="sidebar-list" id="sidebar-app-list">
-                <!-- Сюда вставляются игры -->
-            </div>
-        </div>
-
-        <div class="steam-content-window" id="steam-content-area">
-            <div class="game-hero-banner" id="active-game-detail-view" style="display:none;">
-                <div class="studio-badge" id="game-studio-badge">РАЗРАБОТЧИК</div>
-                <div class="game-hero-title" id="game-title">Название игры</div>
-                <div class="game-hero-desc" id="game-description">Описание игры появится здесь.</div>
-                <div class="steam-action-bar">
-                    <div class="price-text" id="game-price">$0.00</div>
-                    <div style="display:flex;gap:10px;">
-                        <button class="play-btn" id="play-game-btn" style="display:none;" onclick="launchGame()">▶️ ИГРАТЬ</button>
-                        <button class="buy-btn" id="buy-game-btn" style="display:none;" onclick="purchaseApp()">🛒 КУПИТЬ</button>
-                    </div>
-                </div>
-
-                <!-- Рейтинг -->
-                <div class="rating-stars" id="rating-stars">
-                    <div class="star" data-value="1">★</div>
-                    <div class="star" data-value="2">★</div>
-                    <div class="star" data-value="3">★</div>
-                    <div class="star" data-value="4">★</div>
-                    <div class="star" data-value="5">★</div>
-                </div>
-                <div id="avg-rating" style="font-size:12px; color:#666; margin-top:4px;">Оценок пока нет</div>
-            </div>
-
-            <!-- Блок отзывов -->
-            <div class="reviews-section">
-                <div class="reviews-title">💬 Отзывы игроков</div>
-
-                <!-- Форма отзыва -->
-                <div class="review-form">
-                    <input type="text" id="review-author-name" class="review-name-input" placeholder="Ваше имя (можно анонимно)" value="Аноним">
-                    <div style="display:flex;gap:5px;flex-wrap:wrap;" id="review-rating-input">
-                        <span>Оценка: </span>
-                        <span class="star" data-value="1" style="cursor:pointer;">★</span>
-                        <span class="star" data-value="2" style="cursor:pointer;">★</span>
-                        <span class="star" data-value="3" style="cursor:pointer;">★</span>
-                        <span class="star" data-value="4" style="cursor:pointer;">★</span>
-                        <span class="star" data-value="5" style="cursor:pointer;">★</span>
-                    </div>
-                    <textarea id="review-text" class="review-textarea" placeholder="Напишите свой отзыв об игре..."></textarea>
-                    <button class="submit-review-btn" onclick="submitReview()">Отправить отзыв</button>
-                </div>
-
-                <!-- Список отзывов -->
-                <div class="reviews-list" id="reviews-list">
-                    <!-- Сюда подгружаются отзывы -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Уведомления -->
-    <div class="toast-notification" id="toast">Игра куплена!</div>
-
-    <!-- Скрипт -->
+    <!-- Контейнер для игр -->
+    <main id="games-container" class="games-grid">
+        <!-- Статус загрузки -->
+        <div class="status loading">Загружаем игры...</div>
+    </main>
+    <!-- Основной скрипт для работы платформы -->
     <script>
-// === ГЛАВНЫЕ ПЕРЕМЕННЫЕ ===
-let currentSteamTab = "store";
-let selectedAppId = null;
-let currentUser = localStorage.getItem("tor_logged_user") || null;
-let userRole = localStorage.getItem("tor_logged_role") || null;
-
-// === СТАНДАРТНЫЕ ИГРЫ ===
-const defaultApps = [
-    {
-        id: "monopoly",
-        title: "Монополия Online",
-        desc: "Классическая экономическая стратегия. Купи все участки и разори друзей!",
-        price: 10,
-        genre: "стратегия",
-        file: "monopoly.html"
-    },
-    {
-        id: "sandboxx",
-        title: "Sandbox X",
-        desc: "Песочница с физикой, блоками и бесконечными возможностями.",
-        price: 15,
-        genre: "песочница",
-        file: "sandboxx.html"
-    },
-    {
-        id: "taiga",
-        title: "Тайга RPG",
-        desc: "Выживание в тайге. Охота, строительство, волки и одиночество.",
-        price: 20,
-        genre: "RPG",
-        file: "taigaRPG.html"
-    }
-];
-
-// === ФУНКЦИИ ПРОФИЛЯ ===
-function login(username, role) {
-    localStorage.setItem("tor_logged_user", username);
-    localStorage.setItem("tor_logged_role", role);
-    currentUser = username;
-    userRole = role;
-    setBalance(username, role === "developer" ? 500 : 100);
-    refreshSteamUI();
-    showToast("✅ Добро пожаловать, " + username + "!");
-}
-
-function logout() {
-    localStorage.removeItem("tor_logged_user");
-    localStorage.removeItem("tor_logged_role");
-    currentUser = null;
-    userRole = null;
-    refreshSteamUI();
-    showToast("👋 До встречи!");
-}
-
-function setBalance(user, amount) {
-    localStorage.setItem("gold_balance_" + user, amount.toFixed(2));
-}
-
-function getBalance() {
-    return parseFloat(localStorage.getItem("gold_balance_" + currentUser) || 0).toFixed(2);
-}
-
-// === ВКЛАДКИ ===
-function switchSteamTab(tab) {
-    currentSteamTab = tab;
-
-    // Список всех возможных вкладок
-    const tabIds = ["tab-link-store", "tab-link-library", "tab-link-sdk", "tab-link-profile"];
-    
-    // Убираем active у всех
-    tabIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove("active-tab");
-    });
-
-    // Добавляем active текущей
-    const currentEl = document.getElementById("tab-link-" + tab);
-    if (currentEl) {
-        currentEl.classList.add("active-tab");
-    }
-
-    refreshSteamUI();
-}
-
-// === ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ===
-function refreshSteamUI() {
-    const walletBar = document.getElementById("steam-wallet-bar");
-    const contentArea = document.getElementById("steam-content-area");
-
-    // Обновляем кошелёк
-    if (currentUser) {
-        walletBar.innerHTML = `🪙 БАЛАНС (${currentUser}): <b>$${getBalance()}</b>`;
-        document.getElementById("tab-link-sdk").style.display = userRole === "developer" ? "block" : "none";
-    } else {
-        walletBar.innerHTML = `🪙 БАЛАНС (Гость): <b>$0.00</b>`;
-        document.getElementById("tab-link-sdk").style.display = "none";
-    }
-
-    // Отрисовка нужной вкладки
-    if (currentSteamTab === "profile") {
-        renderProfileTab();
-    } else if (currentSteamTab === "sdk" && userRole === "developer") {
-        renderSDKTab();
-    } else {
-        renderStoreOrLibrary();
-    }
-
-    // Если выбрана игра — показываем детали
-    if (selectedAppId) {
-        showGameDetails(selectedAppId);
-    }
-}
-
-// === ИГРЫ: МАГАЗИН И БИБЛИОТЕКА ===
-function getAllEcosystemApps() {
-    const published = JSON.parse(localStorage.getItem("istok_published_apps_v3")) || [];
-    return [...defaultApps, ...published];
-}
-
-function getFilteredAppList() {
-    let searchQ = document.getElementById("sidebar-app-search").value.toLowerCase();
-    let genreFilter = document.getElementById("genre-filter").value;
-
-    return getAllEcosystemApps().filter(app => {
-        if (!app.title.toLowerCase().includes(searchQ)) return false;
-        if (genreFilter && app.genre !== genreFilter) return false;
-        let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
-        return currentSteamTab === "library" ? isUnlocked : !isUnlocked;
-    });
-}
-
-function renderSidebarAppList() {
-    const list = document.getElementById("sidebar-app-list");
-    list.innerHTML = "";
-    const apps = getFilteredAppList();
-
-    if (apps.length === 0) {
-        list.innerHTML = "<div style='color:#666; font-size:13px; padding:10px;'>Игры не найдены</div>";
-        return;
-    }
-
-    apps.forEach(app => {
-        const li = document.createElement("div");
-        li.className = "sidebar-item";
-        if (app.id === selectedAppId) li.classList.add("active-item");
-        li.innerHTML = `
-            <span>${app.title}</span>
-            <span class="sidebar-lock-icon">${localStorage.getItem("istok_unlocked_" + app.id) === "true" ? "🔓" : "🔒"}</span>
-        `;
-        li.onclick = () => {
-            selectedAppId = app.id;
-            refreshSteamUI();
-        };
-        list.appendChild(li);
-    });
-}
-
-function renderStoreOrLibrary() {
-    document.getElementById("active-game-detail-view").style.display = "none";
-    renderSidebarAppList();
-}
-
-function showGameDetails(appId) {
-    const app = getAllEcosystemApps().find(a => a.id === appId);
-    if (!app) return;
-
-    const detail = document.getElementById("active-game-detail-view");
-    detail.style.display = "block";
-
-    document.getElementById("game-title").innerText = app.title;
-    document.getElementById("game-description").innerText = app.desc;
-    document.getElementById("game-studio-badge").innerText = "РАЗРАБОТЧИК";
-    document.getElementById("game-price").innerText = app.price === 0 ? "БЕСПЛАТНО" : `$${app.price}.00`;
-
-    const isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
-    document.getElementById("play-game-btn").style.display = isUnlocked ? "block" : "none";
-    document.getElementById("buy-game-btn").style.display = isUnlocked ? "none" : "block";
-
-    loadRating(appId);
-    loadReviews(appId);
-}
-
-// === ПОКУПКА И ЗАПУСК ===
-function purchaseApp() {
-    const app = getAllEcosystemApps().find(a => a.id === selectedAppId);
-    const price = app.price;
-    const balance = parseFloat(getBalance());
-
-    if (balance < price) {
-        showToast("❌ Недостаточно средств!");
-        return;
-    }
-
-    const newBalance = balance - price;
-    localStorage.setItem("gold_balance_" + currentUser, newBalance.toFixed(2));
-    localStorage.setItem("istok_unlocked_" + app.id, "true");
-    showToast("✅ Игра куплена и добавлена в библиотеку!");
-    refreshSteamUI();
-}
-
-function launchGame() {
-    const app = getAllEcosystemApps().find(a => a.id === selectedAppId);
-    document.body.innerHTML = `
-        <iframe src="${app.file}" style="width:100%;height:100vh;border:none;"></iframe>
-        <button onclick="backToIstok()" style="position:fixed;top:10px;right:10px;z-index:9999;background:#1a9fff;color:white;border:none;padding:10px 15px;border-radius:4px;cursor:pointer;">❌ Выйти в ИСТОК</button>
-    `;
-}
-
-function backToIstok() {
-    location.reload();
-}
-
-// === ОТЗЫВЫ И РЕЙТИНГ ===
-function loadReviews(appId) {
-    const reviews = JSON.parse(localStorage.getItem(`istok_reviews_${appId}`)) || [];
-    const list = document.getElementById("reviews-list");
-    list.innerHTML = "";
-
-    if (reviews.length === 0) {
-        list.innerHTML = "<div style='color:#666; font-size:13px;'>Пока нет отзывов. Будьте первым!</div>";
-        return;
-    }
-
-    reviews.forEach(r => {
-        const item = document.createElement("div");
-        item.className = "review-item";
-        item.innerHTML = `
-            <div class="review-author">${r.author}</div>
-            <div class="review-date">${new Date(r.timestamp).toLocaleDateString()} в ${new Date(r.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-            <div class="review-rating">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
-            <div class="review-text">${r.text}</div>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function submitReview() {
-    const appId = selectedAppId;
-    if (!appId) return;
-
-    const author = document.getElementById("review-author-name").value.trim() || "Аноним";
-    const text = document.getElementById("review-text").value.trim();
-    const ratingInput = document.querySelector("#review-rating-input .star.active");
-    const rating = ratingInput ? parseInt(ratingInput.dataset.value) : 0;
-
-    if (text.length < 10) {
-        showToast("⚠️ Отзыв слишком короткий!");
-        return;
-    }
-
-    const reviews = JSON.parse(localStorage.getItem(`istok_reviews_${appId}`)) || [];
-    reviews.push({
-        author,
-        text,
-        rating,
-        timestamp: Date.now()
-    });
-
-    localStorage.setItem(`istok_reviews_${appId}`, JSON.stringify(reviews));
-    document.getElementById("review-text").value = "";
-    showToast("✅ Отзыв отправлен!");
-
-    loadReviews(appId);
-    loadRating(appId);
-}
-
-function loadRating(appId) {
-    const reviews = JSON.parse(localStorage.getItem(`istok_reviews_${appId}`)) || [];
-    if (reviews.length === 0) {
-        document.getElementById("avg-rating").innerText = "Оценок пока нет";
-        return;
-    }
-
-    const avg = (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
-    document.getElementById("avg-rating").innerText = `Средняя оценка: ${avg} (${reviews.length} отзывов)`;
-
-    // Обновляем звёзды
-    const stars = document.querySelectorAll("#rating-stars .star");
-    stars.forEach((star, i) => {
-        star.classList.toggle("active", i < avg);
-    });
-}
-
-// === SDK: ПУБЛИКАЦИЯ ИГРЫ ===
-function renderSDKTab() {
-    document.getElementById("active-game-detail-view").style.display = "none";
-    document.getElementById("sidebar-app-list").innerHTML = "";
-
-    const sdkContent = `
-        <div class="game-hero-banner">
-            <div class="game-hero-title">🛠️ Панель разработчика</div>
-            <div class="game-hero-desc">
-                Опубликуйте свою HTML-игру в экосистеме ИСТОК. 
-                Убедитесь, что файл игры лежит в той же папке, что и index.html.
-            </div>
-            <div style="display:flex;flex-direction:column;gap:10px;margin-top:15px;">
-                <input type="text" id="sdk-game-title" placeholder="Название игры" style="padding:10px;font-size:14px;">
-                <input type="text" id="sdk-game-file" placeholder="Имя файла (например: mygame.html)" style="padding:10px;font-size:14px;">
-                <input type="number" id="sdk-game-price" min="0" placeholder="Цена (в $, 0 — бесплатно)" style="padding:10px;font-size:14px;">
-                <select id="sdk-game-genre" style="padding:10px;font-size:14px;">
-                    <option value="стратегия">Стратегия</option>
-                    <option value="песочница">Песочница</option>
-                    <option value="RPG">RPG</option>
-                    <option value="симулятор">Симулятор</option>
-                    <option value="аркада">Аркада</option>
-                </select>
-                <textarea id="sdk-game-desc" placeholder="Описание игры (минимум 20 символов)" style="padding:10px;font-size:14px;height:80px;"></textarea>
-                <button class="buy-btn" onclick="publishGame()" style="align-self:flex-start;">📤 Опубликовать игру</button>
-            </div>
-        </div>
-    `;
-    document.getElementById("steam-content-area").innerHTML = sdkContent;
-}
-
-function publishGame() {
-    const title = document.getElementById("sdk-game-title").value.trim();
-    const file = document.getElementById("sdk-game-file").value.trim();
-    const price = parseFloat(document.getElementById("sdk-game-price").value);
-    const genre = document.getElementById("sdk-game-genre").value;
-    const desc = document.getElementById("sdk-game-desc").value.trim();
-
-    if (!title || !file || !desc || isNaN(price)) {
-        showToast("❌ Заполните все поля!");
-        return;
-    }
-    if (desc.length < 20) {
-        showToast("⚠️ Описание слишком короткое!");
-        return;
-    }
-    if (!file.endsWith(".html")) {
-        showToast("❌ Файл должен быть .html!");
-        return;
-    }
-
-    const id = title.toLowerCase().replace(/[^a-zа-я0-9]/g, '') + '_' + Date.now();
-    const published = JSON.parse(localStorage.getItem("istok_published_apps_v3")) || [];
-
-    if (published.some(g => g.file === file)) {
-        showToast("❌ Игра с таким файлом уже опубликована!");
-        return;
-    }
-
-    published.push({
-        id,
-        title,
-        file,
-        price,
-        genre,
-        desc,
-        developer: currentUser,
-        publishedAt: new Date().toISOString()
-    });
-
-    localStorage.setItem("istok_published_apps_v3", JSON.stringify(published));
-    showToast("✅ Игра опубликована Теперь её можно купить в магазине.");
-
-    document.getElementById("sdk-game-title").value = "";
-    document.getElementById("sdk-game-file").value = "";
-    document.getElementById("sdk-game-price").value = "";
-    document.getElementById("sdk-game-desc").value = "";
-}
-
-// === ПРОФИЛЬ ===
-function renderProfileTab() {
-    document.getElementById("active-game-detail-view").style.display = "none";
-    document.getElementById("sidebar-app-list").innerHTML = "";
-
-    const owned = getAllEcosystemApps().filter(app => 
-        app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true"
-    );
-
-    const profileHTML = `
-        <div class="game-hero-banner">
-            <div class="game-hero-title">👤 Профиль</div>
-            <div class="game-hero-desc">
-                Добро пожаловать, <b>${currentUser}</b>!<br>
-                Роль: <b>${userRole === "developer" ? "Разработчик" : "Игрок"}</b><br>
-                Всего игр в библиотеке: <b>${owned.length}</b>
-            </div>
-            <button class="buy-btn" style="align-self:flex-start; margin-top:10px;" onclick="logout()">🚪 Выйти</button>
-        </div>
-    `;
-    document.getElementById("steam-content-area").innerHTML = profileHTML;
-}
-
-// === УВЕДОМЛЕНИЯ ===
-function showToast(message) {
-    const toast = document.getElementById("toast");
-    toast.innerText = message;
-    toast.style.opacity = "1";
-    setTimeout(() => { toast.style.opacity = "0"; }, 3000);
-}
-
-// === ЗВЁЗДЫ (рейтинг) ===
-document.addEventListener("click", function(e) {
-    if (e.target.classList.contains("star") && e.target.parentElement.id === "review-rating-input") {
-        const stars = e.target.parentElement.querySelectorAll(".star");
-        const value = e.target.dataset.value;
-
-        stars.forEach(s => {
-            s.classList.remove("active");
-            if (s.dataset.value <= value) s.classList.add("active");
-        });
-    }
-});
-
-// === ИНИЦИАЛИЗАЦИЯ ===
-function initSteamPlatform() {
-    if (!localStorage.getItem("gold_balance_guest")) {
-        localStorage.setItem("gold_balance_guest", "100.00");
-    }
-
-    if (!currentUser) {
-        login("Гость", "user");
-    }
-
-    if (!localStorage.getItem("istok_published_apps_v3")) {
-        localStorage.setItem("istok_published_apps_v3", "[]");
-    }
-
-    switchSteamTab("store");
-}
-
-// Запускаем, когда DOM готов
-document.addEventListener("DOMContentLoaded", initSteamPlatform);
-
-// Переключение темы
-function toggleTheme() {
-    document.body.classList.toggle("light-theme");
-    localStorage.setItem("istok_theme", document.body.classList.contains("light-theme") ? "light" : "dark");
-}
-
-// Восстановление темы при загрузке
-window.onload = function() {
-    const savedTheme = localStorage.getItem("istok_theme");
-    if (savedTheme === "light") {
-        document.body.classList.add("light-theme");
-    }
-};
-</script>
-
+        // Баланс игрока
+        let balance = 100.0;
+
+        // Функция: загружает список игр с сервера
+        async function loadGames() {
+            try {
+                const response = await fetch('api/games.json');
+                if (!response.ok) throw new Error('Сервер вернул ошибку');
+                const games = await response.json();
+                renderGames(games);
+            } catch (error) {
+                document.getElementById('games-container').innerHTML = `
+                    <div class="status">
+                        ❌ Не удалось загрузить игры.<br>
+                        Проверь: 
+                        <ul>
+                            <li>Существует ли файл <code>api/games.json</code></li>
+                            <li>Правильно ли он сгенерирован</li>
+                            <li>Работает ли GitHub Pages</li>
+                        </ul>
+                    </div>
+                `;
+                console.error('Ошибка загрузки игр:', error);
+            }
+        }
+
+        // Функция: отображает игры в виде карточек
+        function renderGames(games) {
+            const container = document.getElementById('games-container');
+            container.innerHTML = ''; // Очищаем статус
+
+            if (games.length === 0) {
+                container.innerHTML = '<div class="status">📦 Нет доступных игр</div>';
+                return;
+            }
+
+            games.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `
+                    <h3>${game.title}</h3>
+                    <p>${game.description}</p>
+                    <p><b>Жанр:</b> ${game.genre}</p>
+                    <p><b>Версия:</b> ${game.version}</p>
+                    <p class="price">Цена: $${game.price}</p>
+                    <button onclick="buyAndPlay('${game.url}', ${game.price})">▶ Купить и запустить</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+        // Функция: покупка и запуск игры
+        function buyAndPlay(gameUrl, price) {
+            if (balance < price) {
+                alert('❌ Недостаточно средств Пополни баланс.');
+                return;
+            }
+
+            const confirmBuy = confirm(`Купить игру за $${price}?`);
+            if (!confirmBuy) return;
+
+            // Снимаем деньги
+            balance -= price;
+            document.getElementById('balance').textContent = balance.toFixed(2);
+
+            // Открываем игру в новом окне
+            const gameWindow = window.open('', '_blank');
+            gameWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Игра: ${gameUrl.split('/').pop()}</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; overflow: hidden; }
+                        iframe { width: 100%; height: 100vh; border: none; }
+                        .exit-btn {
+                            position: fixed; top: 10px; right: 10px; z-index: 999;
+                            background: #e74c3c; color: white; border: none;
+                            padding: 10px 15px; border-radius: 5px; cursor: pointer;
+                            font-size: 14px; font-weight: bold;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <button class="exit-btn" onclick="window.close()">❌ Выйти</button>
+                    <iframe src="${gameUrl}"></iframe>
+                </body>
+                </html>
+            `);
+            gameWindow.document.close();
+        }
+
+        // Загружаем игры при открытии страницы
+        window.onload = loadGames;
+    </script>
 </body>
 </html>
 
-
+<!-- 
+    🛠️ Этот index.html работает с:
+    - games/monopoly/manifest.json
+    - api/games.json (генерируется автоматически)
+    - GitHub Pages + GitHub Actions
+    💡 Все пути относительные — работает везде
+-->

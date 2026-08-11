@@ -1,1 +1,40 @@
+name: Обновить список игр
 
+on:
+  push:
+    branches: [ main, master ]  # Срабатывает при пуше в main или master
+  workflow_dispatch:            # Позволяет запустить вручную
+
+jobs:
+  update-games-list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Клонировать репозиторий
+        uses: actions/checkout@v4
+
+      - name: Установить Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Запустить генератор игр
+        run: python3 generate_games.py
+
+      - name: Проверить, были ли изменения
+        id: changes
+        run: |
+          if git diff --cached --quiet api/games.json; then
+            echo "no changes"
+            echo "HAS_CHANGED=false" >> $GITHUB_ENV
+          else
+            echo "HAS_CHANGED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Запушить обновлённый games.json
+        if: env.HAS_CHANGED == 'true'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add api/games.json
+          git commit -m "🔄 Автообновление: обновлён список игр"
+          git push

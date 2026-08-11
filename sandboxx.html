@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SAND;BOXX</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000000;
+            font-family: 'Segoe UI', -apple-system, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            color: #eee;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            display: none; 
+            z-index: 1;
+            cursor: crosshair;
+        }
+
+        #intro-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.6s ease;
+        }
+
+        .intro-text {
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            font-size: 36px;
+            letter-spacing: 6px;
+            color: #fff;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 229, 255, 0.8), 0 0 40px rgba(0, 229, 255, 0.4);
+            animation: pulseIntro 2.4s ease-in-out forwards;
+        }
+
+        @keyframes pulseIntro {
+            0% { opacity: 0; transform: scale(0.95); filter: blur(4px); }
+            25% { opacity: 1; transform: scale(1.0); filter: blur(0px); }
+            75% { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 0; transform: scale(1.04); filter: blur(2px); }
+        }
+
+        #main-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #0f101b 0%, #030306 100%);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        .menu-title {
+            font-family: 'Impact', sans-serif;
+            font-size: 72px;
+            letter-spacing: 12px;
+            color: #fff;
+            text-shadow: 0 0 25px rgba(0, 225, 255, 0.7);
+            margin-bottom: 30px;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #151522 0%, #0a0a0f 100%);
+            color: #00e5ff;
+            border: 2px solid #00e5ff;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+            transition: all 0.2s ease;
+            width: 240px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .menu-btn:hover {
+            background: #00e5ff;
+            color: #000;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        #about-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 95;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: #101016;
+            border: 2px solid #00e5ff;
+            border-radius: 12px;
+            padding: 30px;
+            width: 80%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+        }
+
+        .modal-content h3 {
+            font-family: 'Impact', sans-serif;
+            font-size: 28px;
+            color: #fff;
+            margin-top: 0;
+            letter-spacing: 2px;
+        }
+
+        .modal-content p {
+            font-size: 14px;
+            color: #b0b0bc;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+
+        #map-generator-bar, #toolbar {
+            display: none;
+        }
+
+        #map-generator-bar {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 15;
+            gap: 8px;
+        }
+
+        .gen-btn {
+            background: #15151f;
+            color: #00e5ff;
+            border: 1px solid #00e5ff;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,229,255,0.1);
+        }
+        .gen-btn:hover { background: #00e5ff; color: #000; }
+
+        #toolbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 175px;
+            background: rgba(10, 10, 14, 0.96);
+            border-top: 3px solid #00e5ff;
+            box-shadow: 0 -5px 25px rgba(0, 229, 255, 0.25);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+            gap: 5px;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .btn {
+            background: #14141c; color: #a5a5b5; border: 1px solid #222232;
+            padding: 8px 4px; border-radius: 6px; cursor: pointer;
+            font-weight: bold; font-size: 11px; text-transform: uppercase;
+            letter-spacing: 0.5px; text-align: center;
+        }
+        .btn:hover { color: #fff; background: #1b1b29; }
+
+        .btn.active[data-element="sand"] { background: #e0b034; color: #000; border-color: #ffe066; }
+        .btn.active[data-element="water"] { background: #1976d2; color: #fff; border-color: #42a5f5; }
+        .btn.active[data-element="wall"] { background: #555; color: #fff; border-color: #999; }
+        .btn.active[data-element="fire"] { background: #d32f2f; color: #fff; border-color: #ef5350; }
+        .btn.active[data-element="plant"] { background: #2e7d32; color: #fff; border-color: #4caf50; }
+        .btn.active[data-element="oil"] { background: #3e2723; color: #fff; border-color: #5d4037; }
+        .btn.active[data-element="gunpowder"] { background: #78909c; color: #fff; border-color: #b0bec5; }
+        .btn.active[data-element="cement"] { background: #90a4ae; color: #000; border-color: #cfd8dc; }
+        .btn.active[data-element="acid"] { background: #76ff03; color: #000; border-color: #ccff90; }
+        .btn.active[data-element="lava"] { background: #ff6d00; color: #fff; border-color: #ffab40; }
+        .btn.active[data-element="ice"] { background: #00e5ff; color: #000; border-color: #e0f7fa; }
+        .btn.active[data-element="c4"] { background: #ff1744; color: #fff; border-color: #ff5252; }
+        .btn.active[data-element="lightning"] { background: #ffd600; color: #000; border-color: #ffff00; }
+        
+        .btn.active[data-element="virus"] { background: #1be36d; color: #000; border-color: #a5d6a7; }
+        .btn.active[data-element="antimatter"] { background: #d500f9; color: #fff; border-color: #f50057; }
+        .btn.active[data-element="chronocrystal"] { background: #00e5ff; color: #000; border-color: #b388ff; }
+        .btn.active[data-element="sponge"] { background: #81c784; color: #000; border-color: #a5d6a7; }
+        .btn.active[data-element="portal_in"] { background: #ff6d00; color: #fff; border-color: #ffb74d; }
+        .btn.active[data-element="portal_out"] { background: #2962ff; color: #fff; border-color: #64b5f6; }
+        .btn.active[data-element="prisma"] { background: #e0f7fa; color: #000; border-color: #ffffff; }
+        .btn.active[data-element="hydrogen"] { background: #b3e5fc; color: #000; border-color: #e1f5fe; }
+        .btn.active[data-element="bloodmoon"] { background: #aa0000; color: #fff; border-color: #ff1744; }
+        
+        .btn.active[data-element="eraser"] { background: #37474f; color: #fff; border-color: #455a64; }
+        .btn.clear { background: #421212; border-color: #631c1c; color: #ffbaba; grid-column: span 2; }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <div class="intro-text">GAME EVOLUTION<br><span style="font-size: 20px; letter-spacing: 4px; color: #00e5ff;">presents</span></div>
+    </div>
+
+    <div id="main-menu" style="display: none;">
+        <div class="menu-title">SAND;BOXX</div>
+        <button class="menu-btn" onclick="startGame()">ИГРАТЬ</button>
+        <button class="menu-btn" onclick="openModal()">ОБ ИГРЕ</button>
+    </div>
+
+    <div id="about-modal">
+        <div class="modal-content">
+            <h3>ОБ ИГРЕ</h3>
+            <p><b>SAND;BOXX</b> — Физическая пиксельная песочница элементов.<br><br>Смешивайте 21 вещество, управляйте кристаллами времени, настраивайте направление ветра и устраивайте хаос!</p>
+            <button class="menu-btn" style="font-size: 14px; padding: 10px 20px; width: auto;" onclick="closeModal()">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+    <div id="game-wrapper">
+        <div id="map-generator-bar">
+            <button class="gen-btn" onclick="generateMap('caves')">🗺️ Пещеры</button>
+            <button class="gen-btn" onclick="generateMap('cups')">🧪 Лаборатория</button>
+            <button class="gen-btn" onclick="generateMap('chaos')">💥 Мега-Хаос</button>
+            <button class="gen-btn" id="wind-btn" onclick="toggleWind()">💨 ВЕТЕР: ВЫКЛ</button>
+        </div>
+
+        <div id="game-title" style="display: none; position: absolute; top: 15px; right: 25px; font-size: 24px; font-weight: 900; letter-spacing: 4px; color: #ffffff; text-shadow: 0 0 15px rgba(0, 229, 255, 0.6); font-family: 'Impact', sans-serif; z-index: 10; pointer-events: none;">SAND;BOXX</div>
+        <canvas id="sandboxCanvas"></canvas>
+        
+        <div id="toolbar">
+            <button class="btn active" data-element="sand" onclick="changeElement('sand')">🟡 Песок</button>
+            <button class="btn" data-element="water" onclick="changeElement('water')">🔵 Вода</button>
+            <button class="btn" data-element="wall" onclick="changeElement('wall')">🧱 Гранит</button>
+            <button class="btn" data-element="fire" onclick="changeElement('fire')">🔥 Огонь</button>
+            <button class="btn" data-element="plant" onclick="changeElement('plant')">🌿 Семена</button>
+            <button class="btn" data-element="oil" onclick="changeElement('oil')">🛢️ Нефть</button>
+            <button class="btn" data-element="gunpowder" onclick="changeElement('gunpowder')">💥 Порох</button>
+            <button class="btn" data-element="cement" onclick="changeElement('cement')">🌫️ Цемент</button>
+            <button class="btn" data-element="acid" onclick="changeElement('acid')">🟢 Кислота</button>
+            <button class="btn" data-element="lava" onclick="changeElement('lava')">🌋 Лава</button>
+            <button class="btn" data-element="ice" onclick="changeElement('ice')">❄️ Лёд</button>
+            <button class="btn" data-element="c4" onclick="changeElement('c4')">💣 Заряд C4</button>
+            <button class="btn" data-element="lightning" onclick="changeElement('lightning')">⚡ Молния</button>
+            
+            <button class="btn" data-element="virus" onclick="changeElement('virus')">🦠 Вирус</button>
+            <button class="btn" data-element="antimatter" onclick="changeElement('antimatter')">🌌 Антиматерия</button>
+            <button class="btn" data-element="chronocrystal" onclick="changeElement('chronocrystal')">🔮 Хроно-Блок</button>
+            <button class="btn" data-element="sponge" onclick="changeElement('sponge')">🧽 Мох-Губка</button>
+            <button class="btn" data-element="portal_in" onclick="changeElement('portal_in')">🟠 Вход Портала</button>
+            <button class="btn" data-element="portal_out" onclick="changeElement('portal_out')">🔵 Выход Портала</button>
+            <button class="btn" data-element="prisma" onclick="changeElement('prisma')">💎 Призма</button>
+            <button class="btn" data-element="hydrogen" onclick="changeElement('hydrogen')">🎈 Водород</button>
+            <button class="btn" data-element="bloodmoon" onclick="changeElement('bloodmoon')">🩸 Кр. Луна</button>
+            
+            <button class="btn" data-element="eraser" onclick="changeElement('eraser')">🧽 Ластик</button>
+            <button class="btn clear" onclick="clearCanvas()">🗑️ Сбросить всё</button>
+        </div>
+    </div>
+
+    <script>
+        let isGameRunning = false; 
+
+        setTimeout(() => {
+            document.getElementById('intro-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('main-menu').style.display = 'flex';
+            }, 600);
+        }, 2500);
+
+        function startGame() {
+            document.getElementById('main-menu').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('main-menu').style.display = 'none';
+                
+                document.getElementById('sandboxCanvas').style.display = 'block';
+                document.getElementById('map-generator-bar').style.display = 'flex';
+                document.getElementById('toolbar').style.display = 'grid';
+                document.getElementById('game-title').style.display = 'block';
+                
+                resizeGame();
+                isGameRunning = true; 
+            }, 400);
+        }
+
+        function openModal() { document.getElementById('about-modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('about-modal').style.display = 'none'; }
+
+        const canvas = document.getElementById('sandboxCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const width = 160;
+        const height = 150;
+        let scaleX, scaleY;
+        let physicsHeightLimit = 110;
+
+        function resizeGame() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            scaleX = canvas.width / width; scaleY = canvas.height / height;
+            const toolbarHeight = document.getElementById('toolbar').offsetHeight;
+            physicsHeightLimit = Math.floor((canvas.height - toolbarHeight) / scaleY);
+        }
+
+        const EMPTY = 0, SAND = 1, WATER = 2, WALL = 3, FIRE = 4, LIGHTNING = 5, C4 = 6;
+        const PLANT = 7, OIL = 8, GUNPOWDER = 9, CEMENT = 10, WET_CEMENT = 11, CONCRETE = 12, ACID = 13;
+        const LAVA = 14, ICE = 15, VIRUS = 16, ANTIMATTER = 17, CHRONOCRYSTAL = 18, SPONGE = 19;
+        const PORTAL_IN = 20, PORTAL_OUT = 21, PRISMA = 22, HYDROGEN = 23, SPONGE_WET = 24, BLOODMOON = 25;
+
+        let grid = Array(width).fill().map(() => Array(height).fill(EMPTY));
+        let nextGrid = Array(width).fill().map(() => Array(height).fill(EMPTY));
+        let cementTimers = Array(width).fill().map(() => Array(height).fill(0));
+        let spongeStorage = Array(width).fill().map(() => Array(height).fill(EMPTY));
+
+        let currentElement = 'sand';
+        let isDrawing = false;
+
+        function changeElement(type) {
+            currentElement = type;
+            document.querySelectorAll('#toolbar .btn').forEach(b => {
+                if (b.classList.contains('clear')) return;
+                b.classList.toggle('active', b.getAttribute('data-element') === type);
+            });
+        }
+
+        function clearCanvas() {
+            grid = Array(width).fill().map(() => Array(height).fill(EMPTY));
+            spongeStorage = Array(width).fill().map(() => Array(height).fill(EMPTY));
+            cementTimers = Array(width).fill().map(() => Array(height).fill(0));
+        }
+
+        window.addEventListener('resize', resizeGame);
+        let windDirection = 0; 
+        function toggleWind() {
+            const btn = document.getElementById('wind-btn');
+            if (windDirection === 0) {
+                windDirection = 1; btn.innerText = "➡️ ВЕТЕР: ВПРАВО"; btn.style.borderColor = "#76ff03";
+            } else if (windDirection === 1) {
+                windDirection = -1; btn.innerText = "⬅️ ВЕТЕР: ВЛЕВО"; btn.style.borderColor = "#ff1744";
+            } else {
+                windDirection = 0; btn.innerText = "💨 ВЕТЕР: ВЫКЛ"; btn.style.borderColor = "#00e5ff";
+            }
+        }
+
+        // ИСПРАВЛЕННЫЙ АЛГОРИТМ: Создает красивую пещеру по всему объему экрана
+        function generateMap(style) {
+            if (!isGameRunning) return;
+            clearCanvas();
+            resizeGame();
+
+            if (style === 'caves') {
+                for (let x = 0; x < width; x++) {
+                    for (let y = 0; y < physicsHeightLimit; y++) {
+                        // Многослойный тригонометрический шум создает плавные ходы и островки без угловатых коробок
+                        let noise = Math.sin(x * 0.12) * Math.cos(y * 0.12) + Math.sin(x * 0.05) * Math.sin(y * 0.2);
+                        
+                        // Формируем внутренние ходы, оставляя потолок и пол открытыми
+                        if (noise > 0.15 && y > 20 && y < physicsHeightLimit - 15) {
+                            grid[x][y] = WALL;
+                        }
+                    }
+                }
+                // Наливаем ровный слой воды на самом верху пещер
+                for (let x = 5; x < width - 5; x++) {
+                    for (let y = 2; y < 12; y++) {
+                        grid[x][y] = WATER;
+                    }
+                }
+                // Расставляем несколько лазерных призм на свободных местах
+                for (let x = 20; x < width; x += 40) {
+                    grid[x][16] = PRISMA;
+                }
+            } 
+            else if (style === 'cups') {
+                const wHalf = Math.floor(width / 3);
+                for (let c = 0; c < 3; c++) {
+                    let startX = c * wHalf + 8; let endX = (c + 1) * wHalf - 8; let bottomY = physicsHeightLimit - 12;
+                    for (let x = startX; x <= endX; x++) grid[x][bottomY] = WALL;
+                    for (let y = bottomY - 35; y <= bottomY; y++) { grid[startX][y] = WALL; grid[endX][y] = WALL; }
+                    for(let x = startX+1; x < endX; x++) {
+                        for(let y = bottomY-15; y < bottomY; y++) {
+                            if(c === 0) grid[x][y] = VIRUS;
+                            if(c === 1) grid[x][y] = LAVA;
+                            if(c === 2) grid[x][y] = CHRONOCRYSTAL;
+                        }
+                    }
+                }
+            } 
+            else if (style === 'chaos') {
+                for (let x = 0; x < width; x++) {
+                    if (x === 25) { for(let y=10; y<40; y++) grid[x][y] = PORTAL_IN; }
+                    if (x === 135) { for(let y=50; y<80; y++) grid[x][y] = PORTAL_OUT; }
+                    for (let y = physicsHeightLimit - 25; y < physicsHeightLimit; y++) {
+                        if (Math.random() < 0.3) grid[x][y] = C4;
+                        else if (Math.random() < 0.6) grid[x][y] = GUNPOWDER;
+                        else grid[x][y] = BLOODMOON;
+                    }
+                }
+            }
+        }
+
+        function getElementColor(type, x, y) {
+            switch(type) {
+                case SAND: return `hsl(${34 + Math.random() * 6}, 85%, ${50 + Math.random() * 8}%)`;
+                case WATER: return `hsl(${208 + Math.random() * 4}, 85%, 48%)`;
+                case WALL: return '#55555d';
+                case FIRE: return `hsl(${Math.random() * 20 + 8}, 100%, ${55 + Math.random() * 15}%)`;
+                case LIGHTNING: return '#ffeb3b';
+                case C4: return '#ff1744';
+                case PLANT: return `hsl(${120 + (x%4)}, 75%, ${35 + (y%3)}%)`;
+                case OIL: return '#212121';
+                case GUNPOWDER: return '#757575';
+                case CEMENT: return '#90a4ae';
+                case WET_CEMENT: return '#4a4a52';
+                case CONCRETE: return '#78909c';
+                case ACID: return '#76ff03';
+                case LAVA: return `hsl(${15 + Math.random()*15}, 100%, ${50 + Math.random()*15}%)`;
+                case ICE: return '#80deea';
+                case VIRUS: return '#00e676';
+                case ANTIMATTER: return '#d500f9';
+                case CHRONOCRYSTAL: return '#00e5ff';
+                case PORTAL_IN: return '#ff6d00';
+                case PORTAL_OUT: return '#2962ff';
+                case PRISMA: return '#ffffff';
+                case HYDROGEN: return 'rgba(179, 229, 252, 0.45)';
+                case SPONGE: return '#4caf50';
+                case SPONGE_WET: return '#1b5e20';
+                case BLOODMOON: return `hsl(0, 100%, ${30 + Math.random()*15}%)`;
+                default: return '#000000';
+            }
+        }
+        function updatePhysics() {
+            if (!isGameRunning) return; 
+
+            // Сначала просто копируем текущее состояние в следующий кадр
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < height; y++) { nextGrid[x][y] = grid[x][y]; }
+            }
+
+            let timeFrozenMask = Array(width).fill().map(() => Array(height).fill(false));
+            let portalOutputs = [];
+
+            for (let cx = 0; cx < width; cx++) {
+                for (let cy = 0; cy < physicsHeightLimit; cy++) {
+                    if (grid[cx][cy] === CHRONOCRYSTAL) {
+                        let r = 14;
+                        for(let dx = -r; dx <= r; dx++) {
+                            for(let dy = -r; dy <= r; dy++) {
+                                if (dx*dx + dy*dy <= r*r && cx+dx >= 0 && cx+dx < width && cy+dy >= 0 && cy+dy < physicsHeightLimit) {
+                                    timeFrozenMask[cx+dx][cy+dy] = true;
+                                }
+                            }
+                        }
+                    }
+                    if (grid[cx][cy] === PORTAL_OUT) portalOutputs.push({x: cx, y: cy});
+                }
+            }
+
+            for (let y = physicsHeightLimit - 1; y >= 0; y--) {
+                for (let x = 0; x < width; x++) {
+                    let current = grid[x][y];
+                    // Если ячейка пустая или это монолитная стена/лед/кристалл — она не двигается
+                    if (current === EMPTY || current === WALL || current === CONCRETE || current === ICE || current === CHRONOCRYSTAL || current === PORTAL_OUT || current === PRISMA) continue;
+
+                    if (timeFrozenMask[x][y]) continue;
+
+                    // ВЕТЕР: двигает частицы вбок ТОЛЬКО если соседняя клетка абсолютно пустая (EMPTY)
+                    if (windDirection !== 0 && (current === SAND || current === GUNPOWDER || current === CEMENT || current === VIRUS || current === BLOODMOON) && Math.random() < 0.25) {
+                        let targetX = x + windDirection;
+                        if (targetX >= 0 && targetX < width && grid[targetX][y] === EMPTY && nextGrid[targetX][y] === EMPTY) {
+                            nextGrid[x][y] = EMPTY; nextGrid[targetX][y] = current; continue;
+                        }
+                    }
+
+                    let below = (y + 1 < physicsHeightLimit) ? grid[x][y + 1] : -1;
+                    let dir = Math.random() < 0.5 ? -1 : 1;
+                    let sideCheck = (x + dir >= 0 && x + dir < width && y + 1 < physicsHeightLimit) ? grid[x + dir][y + 1] : -1;
+                    let altSideCheck = (x - dir >= 0 && x - dir < width && y + 1 < physicsHeightLimit) ? grid[x - dir][y + 1] : -1;
+
+                    // ПОРТАЛЫ: телепортация
+                    let pNeighbors = [{dx:0,dy:1},{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:-1}];
+                    let teleported = false;
+                    for (let p of pNeighbors) {
+                        if (x+p.dx >= 0 && x+p.dx < width && y+p.dy >= 0 && y+p.dy < physicsHeightLimit && grid[x+p.dx][y+p.dy] === PORTAL_IN && portalOutputs.length > 0) {
+                            let out = portalOutputs[Math.floor(Math.random() * portalOutputs.length)];
+                            if (grid[out.x][out.y + 1] === EMPTY && nextGrid[out.x][out.y + 1] === EMPTY) {
+                                nextGrid[x][y] = EMPTY; nextGrid[out.x][out.y + 1] = current;
+                                teleported = true; break;
+                            }
+                        }
+                    }
+                    if (teleported) continue;
+
+                    // ЗЕРКАЛА И МОЛНИИ
+                    if (current === LIGHTNING) {
+                        if ((grid[x][y+1] === PRISMA || (x+1 < width && grid[x+1][y] === PRISMA) || (x-1 >= 0 && grid[x-1][y] === PRISMA))) {
+                            nextGrid[x][y] = EMPTY; let rx = x + dir * 10;
+                            if (rx >= 0 && rx < width && grid[rx][y] === EMPTY) nextGrid[rx][y] = LIGHTNING;
+                            continue;
+                        }
+                    }
+
+                    // 1. СЫПУЧИЕ (Песок, Порох, Цемент, Вирус, Кровавая луна)
+                    if (current === SAND || current === GUNPOWDER || current === CEMENT || current === VIRUS || current === BLOODMOON) {
+                        // КРАФТ БЕТОНА: проверка контакта цемента с водой
+                        if (current === CEMENT) {
+                            let wNeighbors = [{dx:0,dy:1},{dx:0,dy:-1},{dx:1,dy:0},{dx:-1,dy:0}];
+                            for(let n of wNeighbors) {
+                                if(x+n.dx >= 0 && x+n.dx < width && y+n.dy >= 0 && y+n.dy < height && grid[x+n.dx][y+n.dy] === WATER) {
+                                    nextGrid[x][y] = WET_CEMENT; nextGrid[x+n.dx][y+n.dy] = EMPTY; cementTimers[x][y] = Date.now(); break;
+                                }
+                            }
+                        }
+                        if (current === VIRUS) {
+                            let vNeighbors = [{dx:0,dy:1},{dx:0,dy:-1},{dx:1,dy:0},{dx:-1,dy:0}];
+                            vNeighbors.forEach(v => { if (x+v.dx >= 0 && x+v.dx < width && y+v.dy >= 0 && y+v.dy < height && grid[x+v.dx][y+v.dy] === PLANT) nextGrid[x+v.dx][y+v.dy] = VIRUS; });
+                        }
+
+                        // ПЕРЕМЕЩЕНИЕ: строго в EMPTY, чтобы ничего не стирать!
+                        if (below === EMPTY && nextGrid[x][y + 1] === EMPTY) { nextGrid[x][y] = EMPTY; nextGrid[x][y + 1] = current; } 
+                        else if (sideCheck === EMPTY && nextGrid[x + dir][y + 1] === EMPTY) { nextGrid[x][y] = EMPTY; nextGrid[x + dir][y + 1] = current; } 
+                        else if (altSideCheck === EMPTY && nextGrid[x - dir][y + 1] === EMPTY) { nextGrid[x][y] = EMPTY; nextGrid[x - dir][y + 1] = current; }
+                    } 
+                    
+                    // 2. ЖИДКОСТИ (Вода, Нефть, Кислота, Лава, Мокрый бетон)
+                    else if (current === WATER || current === OIL || current === ACID || current === LAVA || current === WET_CEMENT) {
+                        if (current === WET_CEMENT && Date.now() - cementTimers[x][y] > 3500) { nextGrid[x][y] = CONCRETE; continue; }
+                        if (current === LAVA && (below === WATER || sideCheck === WATER)) { nextGrid[x][y] = WALL; continue; }
+
+                        let sideFlat = (x + dir >= 0 && x + dir < width) ? grid[x + dir][y] : -1;
+                        let altSideFlat = (x - dir >= 0 && x - dir < width) ? grid[x - dir][y] : -1;
+
+                        // ПЕРЕМЕЩЕНИЕ ЖИДКОСТЕЙ: тоже строго в EMPTY ячейки следующего кадра!
+                        if (below === EMPTY && nextGrid[x][y + 1] === EMPTY) { 
+                            nextGrid[x][y] = EMPTY; nextGrid[x][y + 1] = current; 
+                            if(current === WET_CEMENT) cementTimers[x][y+1] = cementTimers[x][y];
+                        } else if (sideCheck === EMPTY && nextGrid[x + dir][y + 1] === EMPTY) { 
+                            nextGrid[x][y] = EMPTY; nextGrid[x + dir][y + 1] = current; 
+                            if(current === WET_CEMENT) cementTimers[x+dir][y+1] = cementTimers[x][y];
+                        } else if (altSideCheck === EMPTY && nextGrid[x - dir][y + 1] === EMPTY) { 
+                            nextGrid[x][y] = EMPTY; nextGrid[x - dir][y + 1] = current; 
+                            if(current === WET_CEMENT) cementTimers[x-dir][y+1] = cementTimers[x][y];
+                        } else if (sideFlat === EMPTY && nextGrid[x + dir][y] === EMPTY) { 
+                            nextGrid[x][y] = EMPTY; nextGrid[x + dir][y] = current; 
+                            if(current === WET_CEMENT) cementTimers[x+dir][y] = cementTimers[x][y];
+                        } else if (altSideFlat === EMPTY && nextGrid[x - dir][y] === EMPTY) { 
+                            nextGrid[x][y] = EMPTY; nextGrid[x - dir][y] = current; 
+                            if(current === WET_CEMENT) cementTimers[x-dir][y] = cementTimers[x][y];
+                        }
+
+                        // Единственное исключение для стирания — это КИСЛОТА (она растворяет по правилам игры)
+                        if (current === ACID) {
+                            let aNeighbors = [{dx:0,dy:1},{dx:1,dy:0},{dx:-1,dy:0}];
+                            for(let t of aNeighbors) {
+                                if(x+t.dx >=0 && x+t.dx < width && y+t.dy >=0 && y+t.dy < height) {
+                                    let tgt = grid[x+t.dx][y+t.dy]; if(tgt !== EMPTY && tgt !== ACID) { nextGrid[x][y] = EMPTY; nextGrid[x+t.dx][y+t.dy] = EMPTY; break; }
+                                }
+                            }
+                        }
+                        // Поглощение воды мхом
+                        if (current === WATER) {
+                            let mNeighbors = [{dx:0,dy:1},{dx:1,dy:0},{dx:-1,dy:0}];
+                            for (let mn of mNeighbors) {
+                                if (x+mn.dx >= 0 && x+mn.dx < width && y+mn.dy >= 0 && y+mn.dy < height && grid[x+mn.dx][y+mn.dy] === SPONGE) {
+                                    nextGrid[x][y] = EMPTY; nextGrid[x+mn.dx][y+mn.dy] = SPONGE_WET; spongeStorage[x+mn.dx][y+mn.dy] = WATER; break;
+                                }
+                            }
+                        }
+                    }
+                    // 3. АНТИМАТЕРИЯ И ВОДОРОД (Летит строго ВВЕРХ)
+                    else if (current === ANTIMATTER || current === HYDROGEN) {
+                        let up = (y - 1 >= 0) ? grid[x][y - 1] : -1;
+                        let upNext = (y - 1 >= 0) ? nextGrid[x][y - 1] : -1;
+                        
+                        // Антиматерия стирает блоки НАД собой только по правилам игры
+                        if (current === ANTIMATTER && (up === WALL || up === CONCRETE)) { 
+                            nextGrid[x][y - 1] = EMPTY; 
+                        }
+                        // Движение газов вверх разрешено только в абсолютно свободные пиксели (EMPTY)
+                        else if (up === EMPTY && upNext === EMPTY) { 
+                            nextGrid[x][y] = EMPTY; nextGrid[x][y - 1] = current; 
+                        }
+                    }
+                    
+                    // 4. СЕМЕНА И МOХ
+                    else if (current === PLANT) {
+                        let pNeighbors = [{dx:0,dy:1},{dx:0,dy:-1},{dx:1,dy:0},{dx:-1,dy:0}];
+                        for(let n of pNeighbors) {
+                            if(x+n.dx >= 0 && x+n.dx < width && y+n.dy >= 0 && y+n.dy < height && grid[x+n.dx][y+n.dy] === WATER) {
+                                nextGrid[x+n.dx][y+n.dy] = EMPTY; 
+                                if (y - 1 >= 0 && grid[x][y - 1] === EMPTY && nextGrid[x][y - 1] === EMPTY) {
+                                    nextGrid[x][y - 1] = PLANT; 
+                                }
+                                break;
+                            }
+                        }
+                        if (below === EMPTY && nextGrid[x][y + 1] === EMPTY) { 
+                            nextGrid[x][y] = EMPTY; nextGrid[x][y + 1] = PLANT; 
+                        }
+                    }
+                    else if (current === SPONGE || current === SPONGE_WET) {
+                        if (below === EMPTY && nextGrid[x][y + 1] === EMPTY) { 
+                            nextGrid[x][y] = EMPTY; nextGrid[x][y + 1] = current; 
+                            spongeStorage[x][y + 1] = spongeStorage[x][y]; spongeStorage[x][y] = EMPTY; 
+                        }
+                    }
+                    
+                    // 5. ОГОНЬ (Сжигает только горючие ячейки)
+                    else if (current === FIRE) {
+                        nextGrid[x][y] = EMPTY;
+                        let fNeighbors = [{dx:0,dy:1},{dx:0,dy:-1},{dx:1,dy:0},{dx:-1,dy:0}];
+                        for(let n of fNeighbors) {
+                            let nx = x+n.dx, ny = y+n.dy;
+                            if(nx >= 0 && nx < width && ny >= 0 && ny < physicsHeightLimit) {
+                                let tgt = grid[nx][ny];
+                                if(tgt === OIL || tgt === GUNPOWDER || tgt === PLANT || tgt === C4 || tgt === VIRUS || tgt === HYDROGEN) { 
+                                    nextGrid[nx][ny] = FIRE; 
+                                }
+                                if(tgt === SPONGE_WET) {
+                                    nextGrid[nx][ny] = FIRE; 
+                                    for(let k=0; k<5; k++) { 
+                                        let rx = nx + Math.floor(Math.random()*5)-2; 
+                                        if(rx>=0 && rx<width && nextGrid[rx][ny-2] === EMPTY) nextGrid[rx][ny-2] = WATER; 
+                                    }
+                                }
+                            }
+                        }
+                        if (y - 1 >= 0 && Math.random() < 0.5 && grid[x][y - 1] === EMPTY && nextGrid[x][y - 1] === EMPTY) {
+                            nextGrid[x][y - 1] = FIRE;
+                        }
+                    }
+                }
+            }
+            let temp = grid; grid = nextGrid; nextGrid = temp;
+        }
+
+        function explodeBig(cx, cy) {
+            let r = 10;
+            for(let dx = -r; dx <= r; dx++) {
+                for(let dy = -r; dy <= r; dy++) {
+                    let nx = cx + dx, ny = cy + dy;
+                    if(nx >= 0 && nx < width && ny >= 0 && ny < physicsHeightLimit) {
+                        if (grid[nx][ny] !== WALL && grid[nx][ny] !== CONCRETE) { 
+                            grid[nx][ny] = FIRE; 
+                        }
+                    }
+                }
+            }
+        }
+        function drawElement(e) {
+            if (!isGameRunning) return; // Запрещаем рисовать, пока открыто меню
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches.clientX : e.clientX;
+            const clientY = e.touches ? e.touches.clientY : e.clientY;
+            
+            // Если кликаем в районе панели элементов или выше шапки — рисование блокируется
+            if (clientY > canvas.height - 185 || clientY < 60) return; 
+
+            const mX = Math.floor((clientX - rect.left) / scaleX);
+            const mY = Math.floor((clientY - rect.top) / scaleY);
+            const r = 3; // Радиус кисти
+
+            for (let dx = -r; dx <= r; dx++) {
+                for (let dy = -r; dy <= r; dy++) {
+                    if (dx*dx + dy*dy > r*r) continue;
+                    // Ограничиваем случайное рассыпание, чтобы струя выглядела красиво и естественно
+                    if (Math.random() > 0.6 && currentElement !== 'wall' && currentElement !== 'eraser' && currentElement !== 'chronocrystal' && currentElement !== 'prisma') continue;
+                    
+                    const nx = mX + dx; const ny = mY + dy;
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < physicsHeightLimit) {
+                        if (currentElement === 'sand') grid[nx][ny] = SAND;
+                        else if (currentElement === 'water') grid[nx][ny] = WATER;
+                        else if (currentElement === 'wall') grid[nx][ny] = WALL;
+                        else if (currentElement === 'fire') grid[nx][ny] = FIRE;
+                        else if (currentElement === 'lightning') grid[nx][ny] = LIGHTNING;
+                        else if (currentElement === 'c4') grid[nx][ny] = C4;
+                        else if (currentElement === 'plant') grid[nx][ny] = PLANT;
+                        else if (currentElement === 'oil') grid[nx][ny] = OIL;
+                        else if (currentElement === 'gunpowder') grid[nx][ny] = GUNPOWDER;
+                        else if (currentElement === 'cement') grid[nx][ny] = CEMENT;
+                        else if (currentElement === 'acid') grid[nx][ny] = ACID;
+                        else if (currentElement === 'lava') grid[nx][ny] = LAVA;
+                        else if (currentElement === 'ice') grid[nx][ny] = ICE;
+                        else if (currentElement === 'virus') grid[nx][ny] = VIRUS;
+                        else if (currentElement === 'antimatter') grid[nx][ny] = ANTIMATTER;
+                        else if (currentElement === 'chronocrystal') grid[nx][ny] = CHRONOCRYSTAL;
+                        else if (currentElement === 'sponge') grid[nx][ny] = SPONGE;
+                        else if (currentElement === 'portal_in') grid[nx][ny] = PORTAL_IN;
+                        else if (currentElement === 'portal_out') grid[nx][ny] = PORTAL_OUT;
+                        else if (currentElement === 'prisma') grid[nx][ny] = PRISMA;
+                        else if (currentElement === 'hydrogen') grid[nx][ny] = HYDROGEN;
+                        else if (currentElement === 'bloodmoon') grid[nx][ny] = BLOODMOON;
+                        else if (currentElement === 'eraser') { grid[nx][ny] = EMPTY; spongeStorage[nx][ny] = EMPTY; }
+                    }
+                }
+            }
+        }
+
+        // Привязка управления для ПК-мыши и сенсорных экранов смартфонов
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; drawElement(e); });
+        window.addEventListener('mousemove', (e) => { if (isDrawing) drawElement(e); });
+        window.addEventListener('mouseup', () => { isDrawing = false; });
+        canvas.addEventListener('touchstart', (e) => { isDrawing = true; drawElement(e); });
+        canvas.addEventListener('touchmove', (e) => { if (isDrawing) drawElement(e); });
+        canvas.addEventListener('touchend', () => { isDrawing = false; });
+
+        window.imgSmoothingEnabled = false;
+
+        // Главный игровой цикл рендеринга
+        function loop() {
+            ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (isGameRunning) { 
+                updatePhysics(); 
+            }
+
+            // Отрисовываем пиксели на холсте только когда игрок зашел в саму игру
+            if (isGameRunning) {
+                for (let x = 0; x < width; x++) {
+                    for (let y = 0; y < physicsHeightLimit; y++) {
+                        if (grid[x][y] !== EMPTY) {
+                            ctx.fillStyle = getElementColor(grid[x][y], x, y);
+                            ctx.fillRect(Math.floor(x * scaleX), Math.floor(y * scaleY), Math.ceil(scaleX), Math.ceil(scaleY));
+                        }
+                    }
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+        
+        // Как только документ полностью загружен, подгоняем сетку под экран
+        window.onload = () => { resizeGame(); };
+        loop();
+    </script>
+</body>
+</html>

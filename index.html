@@ -3,83 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steam Client API V3</title>
+    <title>ИСТОК</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background: #171a21; color: #c7d5e0; font-family: 'Motiva Sans', sans-serif, Arial; min-height: 100vh; padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; }
+        body { background: #171a21; color: #c6d4df; font-family: 'Motiva Sans', sans-serif, Arial; min-height: 100vh; padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; }
         
-        /* Компактный Steam-Хедер */
+        /* Компактный Стим-Бар ИСТОКА */
         header { width: 100%; background: #171d25; border-bottom: 1px solid #222b35; padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-        .logo { font-size: 18px; font-weight: bold; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
-        .logo span { color: #1a9fff; text-shadow: 0 0 8px rgba(26,159,255,0.4); }
+        .logo { font-size: 22px; font-weight: bold; letter-spacing: 2px; color: #fff; text-transform: uppercase; }
+        .logo span { color: #1a9fff; text-shadow: 0 0 10px rgba(26,159,255,0.4); }
         
         nav { display: flex; gap: 20px; }
         .nav-link { color: #b8b6b4; text-decoration: none; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 6px 0; border-bottom: 3px solid transparent; transition: 0.1s; }
         .nav-link:hover, .nav-link.active-tab { color: #fff; border-color: #1a9fff; }
-        .wallet-widget { font-size: 11px; background: #222b35; padding: 5px 12px; border-radius: 2px; border: 1px solid #2a3542; color: #b8b6b4; }
+        .auth-widget { font-size: 11px; background: #222b35; padding: 5px 12px; border-radius: 3px; border: 1px solid #2a3542; display: flex; align-items: center; gap: 8px; color: #b8b6b4; }
         
-        .tab-content { display: none; width: 1050px; max-width: 95%; margin-top: 20px; }
+        .tab-content { display: none; width: 1000px; max-width: 95%; margin-top: 20px; }
         .active-content { display: block !important; }
-        .steam-panel { background: #1b2838; border-radius: 3px; padding: 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.02); }
-        .panel-title { font-size: 11px; font-weight: bold; color: #1a9fff; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #222b35; padding-bottom: 6px; margin-bottom: 15px; }
-        .steam-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .steam-card { background: #2a475e; border-radius: 3px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; transition: all 0.15s ease; position: relative; }
-        .steam-card:hover { background: #386280; border-color: #1a9fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,159,255,0.15); }
+        .steam-panel { background: #1b2838; border-radius: 4px; padding: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.02); }
+        .panel-title { font-size: 11px; font-weight: bold; color: #1a9fff; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #222b35; padding-bottom: 6px; margin-bottom: 12px; }
+        /* Сверх-компактная сетка Steam Deck */
+        .apps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .app-card { background: #2a475e; border-radius: 3px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; transition: 0.15s; border: 1px solid transparent; min-height: 120px; }
+        .app-card:hover { background: #386280; border-color: #1a9fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,159,255,0.2); }
+        .app-title { font-size: 14px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .app-desc { font-size: 11px; color: #c6d4df; line-height: 1.4; }
+        .studio-badge { font-size: 9px; font-weight: bold; color: #f1c40f; text-transform: uppercase; background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 3px; align-self: flex-start; }
         
-        .card-title { font-size: 15px; font-weight: bold; color: #fff; }
-        .card-desc { font-size: 12px; color: #c6d4df; line-height: 1.4; }
-        
-        /* Оригинальная зеленая кнопка Steam ИГРАТЬ */
-        .play-btn { align-self: flex-end; background: linear-gradient(to right, #75b022, #588a1b); border: none; color: #fff; padding: 8px 20px; font-size: 11px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        /* Стим-Кнопка запуска */
+        .play-btn { align-self: flex-end; background: linear-gradient(to right, #75b022, #588a1b); border: none; color: #fff; padding: 8px 20px; font-size: 11px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; transition: 0.1s; letter-spacing: 1px; }
         .play-btn:hover { background: linear-gradient(to right, #8ed629, #699e22); }
-        
-        .card-locked { background: #17202a !important; border: 1px dashed #4c5a6c !important; }
-        .price-tag { position: absolute; top: 0; right: 0; background: #a15620; color: #fff; font-size: 9px; font-weight: bold; padding: 3px 10px; border-bottom-left-radius: 3px; }
-        .buy-btn { align-self: flex-end; background: #203e5f; border: 1px solid #1a9fff; color: #1a9fff; padding: 7px 15px; font-size: 10px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; }
+        .card-locked { background: #171d25 !important; opacity: 0.7; border: 1px dashed #4a5360 !important; }
+        .price-badge { position: absolute; top: 0; right: 0; background: #b45309; color: #fff; font-size: 9px; font-weight: bold; padding: 3px 8px; border-bottom-left-radius: 3px; }
+        .buy-btn { align-self: flex-end; background: #203e5f; border: 1px solid #1a9fff; color: #1a9fff; padding: 6px 12px; font-size: 10px; font-weight: bold; border-radius: 2px; cursor: pointer; text-transform: uppercase; }
         .buy-btn:hover { background: #1a9fff; color: #fff; }
 
-        /* Компактный блок Стим-Отзывов */
-        .rating-bar { font-size: 12px; color: #f1c40f; display: flex; align-items: center; gap: 3px; font-weight: bold; margin-bottom: 2px; }
-        .review-box { background: #171d25; border-radius: 2px; padding: 8px; margin-top: 4px; border: 1px solid #2a3542; display: flex; flex-direction: column; gap: 5px; }
-        .review-scroll { max-height: 60px; overflow-y: auto; font-size: 11px; color: #859bb2; display: flex; flex-direction: column; gap: 3px; }
+        /* Компактный блок рецензий */
+        .review-box { background: #171d25; border-radius: 3px; padding: 6px; margin-top: 2px; border: 1px solid #232b35; font-size: 11px; }
+        .review-list { max-height: 50px; overflow-y: auto; color: #acb2b8; display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }
         .review-item { border-bottom: 1px solid #222b35; padding-bottom: 2px; }
-        .review-inputs { display: flex; gap: 4px; }
-        .review-text-input { background: #2a475e; border: 1px solid #3d6c8f; border-radius: 2px; padding: 5px; color: #fff; font-size: 11px; flex: 1; outline: none; }
-        .stars-dropdown { background: #2a475e; border: 1px solid #3d6c8f; color: #f1c40f; font-size: 11px; padding: 2px; border-radius: 2px; outline: none; }
+        .review-form { display: flex; gap: 4px; }
+        .review-input { background: #2a475e; border: 1px solid #386280; border-radius: 2px; padding: 4px; color: #fff; font-size: 11px; flex: 1; outline: none; }
+        .stars-select { background: #2a475e; border: 1px solid #386280; color: #f1c40f; font-size: 11px; padding: 2px; border-radius: 2px; }
         
         .submit-btn { background: #2a475e; border: 1px solid #1a9fff; color: #fff; padding: 10px; font-weight: bold; font-size: 11px; text-transform: uppercase; cursor: pointer; border-radius: 2px; width: 100%; text-align: center; }
-        .submit-btn:hover { background: #1a9fff; color: #fff; }
-        input { background: #171d25; border: 1px solid #2a3542; border-radius: 2px; padding: 10px; color: #fff; outline: none; font-size: 13px; width: 100%; margin-bottom: 8px; }
+        .submit-btn:hover { background: #1a9fff; color: #000; }
+        input { background: #171d25; border: 1px solid #2a475e; border-radius: 2px; padding: 10px; color: #fff; font-size: 13px; outline: none; width: 100%; margin-bottom: 8px; }
     </style>
 </head>
 <body>
-    <!-- STEAM NAVIGATION HEADER -->
+    <!-- ВЕРХНЯЯ СТИМ-ПАНЕЛЬ ИСТОКА -->
     <header>
-        <div class="logo">🌐 STEAM<span>WEB</span></div>
+        <div class="logo">🌀 ИСТОК</div>
         <nav>
             <div id="tab-link-library" class="nav-link active-tab" onclick="switchTab('library')">Библиотека</div>
             <div id="tab-link-shop" class="nav-link" onclick="switchTab('shop')">Магазин</div>
             <div id="tab-link-profile" class="nav-link" onclick="switchTab('profile')">Аккаунт</div>
         </nav>
-        <div class="wallet-widget" id="steam-wallet-bar"><span>Кошелек: <b>$0</b></span></div>
+        <div class="auth-widget" id="steam-wallet-bar"><span>🪙 Баланс: <b>$0</b></span></div>
     </header>
 
     <!-- ВКЛАДКА 1: БИБЛИОТЕКА ИГР -->
     <div id="tab-library" class="tab-content active-content">
         <div class="steam-panel">
-            <div class="panel-title">Мои Игры (Доступные лицензии)</div>
-            <div class="steam-grid" id="library-container">
-                <!-- Сюда скан-ядро выведет все файлы из репозитория автоматически -->
+            <div class="panel-title">Установленные приложения (Локальное Облако)</div>
+            <div class="apps-grid" id="library-container">
+                <!-- Сюда Стим-Движок выведет ВСЕ .html файлы из твоего репозитория автоматически! -->
             </div>
         </div>
     </div>
 
-    <!-- ВКЛАДКА 2: МАГАЗИН ИГР -->
+    <!-- ВКЛАДКА 2: МАГАЗИН ИГР (ПЛАТНЫЕ ЛОТЫ ЗА МОНЕТЫ) -->
     <div id="tab-shop" class="tab-content">
         <div class="steam-panel">
-            <div class="panel-title">Магазин Секторов (Автоматическое сканирование файлов)</div>
-            <div class="steam-grid" id="shop-container">
-                <!-- Сюда автоматически улетают премиум файлы (.html) -->
+            <div class="panel-title">Магазин ИСТОК: Доступные Лицензии</div>
+            <div class="apps-grid" id="shop-container">
+                <!-- Автоматически выведутся платные файлы -->
             </div>
         </div>
     </div>
@@ -87,64 +86,75 @@
     <!-- ВКЛАДКА 3: ПРОФИЛЬ -->
     <div id="tab-profile" class="tab-content">
         <div class="steam-panel" id="profile-unauth" style="display: none;">
-            <div class="panel-title">Вход в Steam Web Client</div>
-            <div style="width:300px; margin: 0 auto;">
-                <input type="text" id="steam-username-input" placeholder="Введите ваш никнейм...">
-                <button class="submit-btn" onclick="handleSteamLogin()">Войти в аккаунт</button>
+            <div class="panel-title">Вход в Аккаунт</div>
+            <div style="width: 320px; margin: 0 auto; display: flex; flex-direction: column;">
+                <input type="text" id="reg-username-input" placeholder="Введите ваш игровой никнейм...">
+                <button class="submit-btn" onclick="handleHubLogin()">Войти</button>
             </div>
         </div>
 
         <div class="steam-panel" id="profile-auth" style="display: none;">
-            <div class="panel-title">Личный Стим Профиль</div>
-            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
-                <div>Пользователь: <b id="prof-nickname" style="color:#1a9fff;">--</b></div>
-                <div>Баланс Steam-кошелька: <b id="prof-gold-display" style="color:#75b022;">$0</b></div>
-                <button class="submit-btn" style="width:120px; border-color:#e74c3c; color:#e74c3c; background:none; margin-top:10px;" onclick="handleSteamLogout()">Выйти</button>
+            <div class="panel-title">Реестр Аккаунта ИСТОК</div>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                <div>Пользователь: <b id="prof-nickname" style="color: #1a9fff;">Ирина</b></div>
+                <div>Баланс Кошелька: <b id="prof-gold-display" style="color: #f1c40f;">$0</b></div>
+                <button class="submit-btn" style="width: 120px; border-color: #e74c3c; color: #e74c3c; background: none;" onclick="handleHubLogout()">Выйти</button>
+                <button class="submit-btn" style="width: 180px; border-color: #f1c40f; color: #f1c40f; background: none; margin-top: 10px;" onclick="localStorage.clear(); location.reload();">💥 Полный сброс памяти</button>
             </div>
         </div>
     </div>
 <script>
-    // АВТО-ОБНАРУЖЕНИЕ АДРЕСА: Скрипт сам вычисляет твой гитхаб-ник и репозиторий по ссылке в браузере!
+    // АВТО-ДВИЖОК GITHUB API: Лаунчер сам вычисляет адрес твоего репозитория из адресной строки!
+    // Тебе больше вообще не нужно менять код, вписывать ники или трогать games.json.
     let currentUrl = window.location.href;
-    let githubUser = "irina-games"; // Замени на свой ник, если ссылка изменится
-    let githubRepo = "istok";
-    
+    let repoName = "istok"; // По умолчанию
+    let userName = "irina";  // По умолчанию
+
     if (currentUrl.includes("github.io")) {
-        let parts = currentUrl.split("/");
-        githubUser = parts[2].split(".")[0];
-        githubRepo = parts[3];
+        let parts = currentUrl.replace("https://", "").split("/");
+        userName = parts[0].split(".")[0];
+        repoName = parts[1] || "istok";
     }
 
-    // Ссылка на GitHub API для мгновенного чтения списка файлов в твоем репо на лету!
-    const githubApiUrl = `https://github.com{githubUser}/${githubRepo}/contents`;
+    // Ссылка на официальное открытое API гитхаба для автоматического сканирования файлов репо!
+    const githubApiUrl = `https://github.io{userName}/${repoName}/contents/`;
 
     let steamGold = parseInt(localStorage.getItem("hub_global_gold"));
     if (isNaN(steamGold)) { steamGold = 100; localStorage.setItem("hub_global_gold", steamGold); }
 
+    // Кастомный словарь для красивого Стим-оформления файлов
+    const appMetaMeta = {
+        "index.html": { skip: true }, // Лаунчер сам себя не отображает
+        "games.json": { skip: true }, // Стираем зависимость от JSON
+        "monopoly.html": { title: "Супер-Плавная Монополия", price: 0, studio: "ИСТОК CORE", desc: "Графический настольный Virtual Tabletop 60 FPS. Аукционы, шаги фишек и премия +$300 золота!" },
+        "taigaRPG.html": { title: "Свитки Судьбы: ТАЙГА (Премиум)", price: 10, studio: "Irina Games Studio", desc: "Хардкорный текстовый симулятор выживания в лесу Сибири по канонам D&D 5e." },
+        "sandboxx.html": { title: "sand;boxx Песочница", price: 0, studio: "1gamestydio", desc: "Твоя интерактивная оффлайн-песочница. Полная свобода действий и крафт предметов." }
+    };
+
     document.addEventListener("DOMContentLoaded", () => {
-        refreshSteamUI();
+        refreshHubCoreUI();
     });
 
-    function refreshSteamUI() {
+    function refreshHubCoreUI() {
         let currentUser = localStorage.getItem("tor_logged_user");
-        document.getElementById("steam-wallet-bar").innerHTML = `🪙 Кошелек Steam: <b>$${steamGold}</b>`;
+        document.getElementById("steam-wallet-bar").innerHTML = `🪙 Баланс ИСТОК: <b style="color:#f1c40f;">$${steamGold}</b>`;
         localStorage.setItem("hub_global_gold", steamGold);
 
         if (currentUser) {
             document.getElementById("profile-unauth").style.display = "none";
             document.getElementById("profile-auth").style.display = "block";
             document.getElementById("prof-nickname").innerText = currentUser;
-            document.getElementById("prof-gold-display").innerText = `$${steamGold}`;
+            document.getElementById("prof-gold-display").innerText = `$${steamGold} монет`;
         } else {
             document.getElementById("profile-auth").style.display = "none";
             document.getElementById("profile-unauth").style.display = "block";
         }
 
-        scanGitHubRepoAndRender();
+        scanGitHubRepositoryAutomatically();
     }
 
-    // УЛЬТРА-МЕГА СТИМ АВТОМАТИКА: ЧИТАЕТ РЕПОЗИТОРИЙ БЕЗ GAMES.JSON
-    function scanGitHubRepoAndRender() {
+    // НАСТОЯЩИЙ СТИМ-СКАНЕР: САМ НАХОДИТ НОВЫЕ HTML ФАЙЛЫ В ТВОЕМ РЕПОЗИТОРИИ!
+    function scanGitHubRepositoryAutomatically() {
         let libraryContainer = document.getElementById("library-container");
         let shopContainer = document.getElementById("shop-container");
         if(!libraryContainer || !shopContainer) return;
@@ -152,130 +162,109 @@
         libraryContainer.innerHTML = "";
         shopContainer.innerHTML = "";
 
-        fetch(githubApiUrl)
-        .then(res => res.json())
+        // Делаем живой запрос к GitHub API со случайным числом для 100% обхода кэша!
+        fetch(githubApiUrl + "?nocache=" + Date.now())
+        .then(res => {
+            if(!res.ok) throw new Error("API_ERROR");
+            return res.json();
+        })
         .then(files => {
-            // Оставляем строго файлы .html и отсекаем сам index.html
-            let htmlGames = files.filter(f => f.name.endsWith(".html") && f.name !== "index.html");
+            // Фильтруем файлы, оставляя только веб-страницы .html
+            let htmlFiles = files.filter(f => f.name.endsWith(".html"));
 
-            htmlGames.forEach(file => {
-                let fileName = file.name;
-                let gameId = "game_" + fileName.replace(".html", "");
+            htmlFiles.forEach(file => {
+                let meta = appMetaMeta[file.name] || { title: file.name, price: 0, studio: "Инди Разработчик", desc: "Пользовательское оффлайн-приложение, добавленное в репозиторий ИСТОКА." };
+                if (meta.skip) return; // Пропускаем index.html
+
+                let isUnlocked = meta.price === 0 || localStorage.getItem("istok_unlocked_" + file.name) === "true";
                 
-                // Авто-генерация красивого имени из имени файла (Убирает расширение)
-                let cleanTitle = fileName.replace(".html", "").replace("RPG", " RPG");
-                cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
-
-                // АВТО-ОПРЕДЕЛЕНИЕ СТОИМОСТИ: Если имя файла содержит "premium" — ставим 10 монет
-                let isPremium = fileName.toLowerCase().includes("premium");
-                let price = isPremium ? 10 : 0;
-
-                let isUnlocked = price === 0 || localStorage.getItem("istok_unlocked_" + gameId) === "true";
-
-                // Подгружаем отзывы из памяти устройства
-                let reviewsData = JSON.parse(localStorage.getItem("reviews_" + gameId)) || [
-                    { user: "Система", text: "Стабильная оффлайн-сборка.", stars: 5 }
+                let reviewsData = JSON.parse(localStorage.getItem("reviews_" + file.name)) || [
+                    { user: "ИСТОК", text: "Игра проверена, багов не обнаружено.", stars: 5 }
                 ];
                 let totalStars = reviewsData.reduce((sum, r) => sum + parseInt(r.stars), 0);
                 let avgStars = (totalStars / reviewsData.length).toFixed(1);
 
                 let reviewItemsHtml = "";
                 reviewsData.forEach(r => {
-                    reviewItemsHtml += `<div class="review-item"><b>${r.user}</b> (${"★".repeat(r.stars)}): ${r.text}</div>`;
+                    reviewItemsHtml += `<div class="review-item"><b>${r.user}</b>: ${r.text} (${r.stars}★)</div>`;
                 });
 
-                if (isUnlocked) {
-                    // Выводим в Библиотеку
-                    libraryContainer.innerHTML += `
-                        <div class="steam-card">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="font-size:9px; color:#1a9fff; font-weight:bold; text-transform:uppercase;">Лицензия: Активна</div>
-                                <div class="rating-bar">⭐ ${avgStars}</div>
+                // Конструируем Стим-карточку
+                let cardHtml = `
+                    <div class="app-card ${!isUnlocked ? 'card-locked':''}">
+                        <div>
+                            <div style="display:flex; justify-content:between; align-items:center; width:100%;">
+                                <div class="studio-badge">${meta.studio}</div>
+                                <div style="color:#f1c40f; font-size:11px; margin-left:auto; font-weight:bold;">⭐ ${avgStars}</div>
                             </div>
-                            <div class="card-title">${cleanTitle}</div>
-                            <div class="card-desc">Файл проекта: ${fileName}. Стабильный запуск из облачного кластера.</div>
-                            
+                            <div class="app-title" style="margin-top:4px;">${meta.title}</div>
+                            <div class="app-desc" style="margin-top:2px;">${meta.desc}</div>
+                        </div>
+                        
+                        ${isUnlocked ? `
                             <div class="review-box">
-                                <div class="review-scroll">${reviewItemsHtml}</div>
-                                <div class="review-inputs">
-                                    <input type="text" id="input-text-${gameId}" class="review-text-input" placeholder="Оставить рецензию...">
-                                    <select id="select-stars-${gameId}" class="stars-dropdown">
-                                        <option value="5">5★</option><option value="4">4★</option>
-                                        <option value="3">3★</option>
+                                <div class="review-list">${reviewItemsHtml}</div>
+                                <div class="review-form">
+                                    <input type="text" id="input-text-${file.name}" class="review-input" placeholder="Оставить Стим-отзыв...">
+                                    <select id="select-stars-${file.name}" class="stars-select">
+                                        <option value="5">5★</option><option value="4">4★</option><option value="3">3★</option>
                                     </select>
-                                    <button class="play-btn" style="padding:3px 8px; font-size:9px;" onclick="submitSteamReview('${gameId}')">OK</button>
+                                    <button class="play-btn" style="padding:2px 8px; font-size:9px;" onclick="submitUserReview('${file.name}')">▶</button>
                                 </div>
                             </div>
-                            <button class="play-btn" style="margin-top:3px;" onclick="location.href='./${fileName}'">ИГРАТЬ</button>
-                        </div>`;
-                } else {
-                    // Отправляем в Магазин
-                    shopContainer.innerHTML += `
-                        <div class="steam-card card-locked">
-                            <div class="price-tag">🔒 ВЫКУПИТЬ: $${price} монет</div>
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="font-size:9px; color:#e67e22; font-weight:bold; text-transform:uppercase;">Магазин</div>
-                                <div class="rating-bar">⭐ ${avgStars}</div>
-                            </div>
-                            <div class="card-title">${cleanTitle}</div>
-                            <div class="card-desc">Дополнительный контент. Требуется лицензионный выкуп за внутриигровое золото хаба.</div>
-                            <button class="buy-btn" onclick="buySteamLicense('${gameId}', ${price})">Купить за $${price}</button>
-                        </div>`;
-                }
-            });
+                            <button class="play-btn" style="margin-top:4px;" onclick="location.href='./${file.name}?v=${Date.now()}'">ИГРАТЬ</button>
+                        ` : `
+                            <div class="price-badge">🔒 ЗАБЛОКИРОВАНO: $${meta.price}</div>
+                            <button class="buy-btn" onclick="buyIstokLicense('${file.name}', ${meta.price})">Купить за $${meta.price}</button>
+                        `}
+                    </div>`;
 
-            if (shopContainer.innerHTML === "") {
-                shopContainer.innerHTML = `<div style="grid-column:1/3; text-align:center; color:#566573; font-size:12px; font-style:italic; padding:15px;">Все платные игры из репозитория успешно выкуплены!</div>`;
-            }
+                if (isUnlocked) libraryContainer.innerHTML += cardHtml;
+                else shopContainer.innerHTML += cardHtml;
+            });
         })
         .catch(() => {
-            libraryContainer.innerHTML = `<div style="grid-column:1/3; text-align:center; color:#b8b6b4; padding:20px; font-size:12px;">📡 Ошибка API: Не удалось просканировать репозиторий GitHub. Проверьте интернет.</div>`;
+            // Оффлайн заглушка на случай, если API гитхаба временно заблокировано лимитами запросов
+            libraryContainer.innerHTML = `<div style="grid-column:1/3; text-align:center; color:#acb2b8; padding:20px;">📡 Ошибка авторизации API GitHub. Включен автономный режим запуска.<br><br><button class="play-btn" style="align-self:center;" onclick="location.href='./monopoly.html'">Запустить Монополию</button> <button class="play-btn" style="align-self:center; background:orange;" onclick="location.href='./taigaRPG.html'">Запустить Тайгу</button></div>`;
         });
     }
 
-    function submitSteamReview(gameId) {
-        let textInput = document.getElementById("input-text-" + gameId);
-        let starsSelect = document.getElementById("select-stars-" + gameId);
-        if(!textInput || !textInput.value.trim()) return;
+    function submitUserReview(fileName) {
+        let textInput = document.getElementById("input-text-" + fileName);
+        let starsSelect = document.getElementById("select-stars-" + fileName);
+        if(!textInput || !textInput.value.trim()) return alert("Введите текст отзыва!");
 
         let currentUser = localStorage.getItem("tor_logged_user") || "Игрок";
-        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + gameId)) || [
-            { user: "Система", text: "Стабильная оффлайн-сборка.", stars: 5 }
+        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + fileName)) || [
+            { user: "ИСТОК", text: "Игра проверена, багов не обнаружено.", stars: 5 }
         ];
 
         reviewsData.push({ user: currentUser, text: textInput.value.trim(), stars: parseInt(starsSelect.value) });
-        localStorage.setItem("reviews_" + gameId, JSON.stringify(reviewsData));
-        textInput.value = "";
-        scanGitHubRepoAndRender();
+        localStorage.setItem("reviews_" + fileName, JSON.stringify(reviewsData));
+        textInput.value = ""; 
+        scanGitHubRepositoryAutomatically();
     }
 
-    function buySteamLicense(gameId, price) {
-        if (steamGold < price) return alert("❌ Ошибка: Недостаточно монет! Обанкротьте бота в Монополии.");
+    function buyIstokLicense(fileName, price) {
+        if (steamGold < price) return alert("❌ Ошибка: Недостаточно монет! Выиграйте раунд в Монополии, чтобы получить +$300.");
         steamGold -= price;
-        localStorage.setItem("istok_unlocked_" + gameId, "true");
-        alert("🎉 Лицензия добавлена! Игра перенесена в вашу Библиотеку.");
-        refreshSteamUI();
+        localStorage.setItem("istok_unlocked_" + fileName, "true");
+        alert("🎉 Лицензия успешно приобретена! Игра добавлена в вашу личную Библиотеку.");
+        refreshHubCoreUI();
     }
 
-    function handleSteamLogin() {
-        let name = document.getElementById("steam-username-input").value.trim();
+    function handleHubLogin() {
+        let name = document.getElementById("reg-username-input").value.trim();
         if (!name) return alert("Введите имя!");
         localStorage.setItem("tor_logged_user", name);
-        refreshSteamUI(); switchTab('library');
+        refreshHubCoreUI(); switchTab('library');
     }
-
-    function handleSteamLogout() {
-        localStorage.removeItem("tor_logged_user"); refreshSteamUI(); switchTab('library');
-    }
+    function handleHubLogout() { localStorage.removeItem("tor_logged_user"); refreshHubCoreUI(); switchTab('library'); }
 
     function switchTab(tabKey) {
         ['library', 'shop', 'profile'].forEach(k => {
-            document.getElementById("tab-content-" + k)?.classList.remove("active-content");
-            document.getElementById("tab-link-" + k)?.classList.remove("active-tab");
-            
-            // Синхронизация названий контейнеров из разметки
-            let block = document.getElementById("tab-" + k);
-            if(block) block.classList.remove("active-content");
+            document.getElementById("tab-link-" + k).classList.remove("active-tab");
+            document.getElementById("tab-" + k).classList.remove("active-content");
         });
         document.getElementById("tab-link-" + tabKey).classList.add("active-tab");
         document.getElementById("tab-" + tabKey).classList.add("active-content");

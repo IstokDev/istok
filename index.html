@@ -143,42 +143,153 @@
     </div>
 
 <script>
-    // ВШИТЫЙ КАТАЛОГ СЕКТОРОВ
-    const defaultApps = [
-        { id: "monopoly", file: "monopoly.html", title: "Супер-Плавная Монополия", price: 0, studio: "ИСТОК CORE", developer: "system", desc: "Настольный экономический стол 60 FPS. Скупайте улицы, устраивайте Аукционы. За победу над Ботом выдается премия +$300 золота!" },
-        { id: "sandboxx", file: "sandboxx.html", title: "sand;boxx", price: 0, studio: "1gamestydio", developer: "system", desc: "Твоя песочница. Полная свобода действий, крафт предметов и кастомные испытания без ограничений!" },
-        { id: "taiga", file: "taigaRPG.html", title: "Свитки Судьбы: ТАЙГА (Премиум)", price: 10, studio: "Irina Games Studio", developer: "system", desc: "Хардкорный текстовый симулятор выживания в лесу Сибири по канонам 5e." }
-    ];
+    function renderSidebarAppList() {
+        let container = document.getElementById("sidebar-apps-injection-point");
+        if(!container) return; container.innerHTML = "";
+        document.getElementById("sidebar-group-title").innerText = currentSteamTab === "library" ? "Моя библиотека" : "Магазин лицензий";
 
-    // ГЛОБАЛЬНАЯ ВЕЧНАЯ ИНТЕРНЕТ-БАЗА ДАННЫХ ДЛЯ ХРАНЕНИЯ ПРОФИЛЕЙ И КОШЕЛЬКОВ
-    const CLOUD_ACCOUNTS_API = "https://jsonbin.io";
-    const MASTER_KEY = "$2a$10$UoWnO8b0wYvj0rMszNqMDOqG0rS7Tte8nNn2kFidbW.L5vVeeZ1C.";
+        let filtered = getFilteredAppList();
+        if (filtered.length === 0) {
+            container.innerHTML = `<div style="font-size:11px; color:#859bb2; padding:5px; text-align:center;">Список пуст...</div>`;
+            return;
+        }
 
-    let currentSteamTab = "store"; let selectedAppId = "taiga"; let loginRoleSelection = "player";
-
-    document.addEventListener("DOMContentLoaded", () => { pullUserDataFromCloudAndRefresh(); });
-
-    function selectLoginRole(roleKey) {
-        loginRoleSelection = roleKey;
-        document.getElementById("role-player").classList.remove("active-role");
-        document.getElementById("role-dev").classList.remove("active-role");
-        document.getElementById("role-" + roleKey).classList.add("active-role");
-    }
-
-    function getAllEcosystemApps() {
-        let customApps = JSON.parse(localStorage.getItem("istok_published_apps_v3")) || [];
-        return [...defaultApps, ...customApps];
-    }
-
-    function getFilteredAppList() {
-        let searchQ = document.getElementById("sidebar-app-search").value.toLowerCase();
-        return getAllEcosystemApps().filter(app => {
-            if (!app.title.toLowerCase().includes(searchQ)) return false;
+        filtered.forEach(app => {
             let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
-            return currentSteamTab === "library" ? isUnlocked : !isUnlocked;
+            let div = document.createElement("div");
+            div.className = `sidebar-item ${selectedAppId === app.id ? 'active-item' : ''}`;
+            div.innerHTML = app.title + (!isUnlocked ? ' <span class="sidebar-lock-icon">🔒</span>':'');
+            div.onclick = () => { selectedAppId = app.id; refreshSteamUI(); };
+            container.appendChild(div);
         });
     }
+
+    // ЖИВАЯ ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ С ЛЮБЫМ ТЕЛЕФОНОМ И ПК В МИРЕ
+    function pullUserDataFromCloudAndRefresh() {
+        let user = localStorage.getItem("tor_logged_user");
+        if (!user) { refreshSteamUI(); return; }
+
+        if(document.getElementById("cloud-sync-status-badge")) document.getElementById("cloud-sync-status-badge").innerText = "☁️ Обновление...";
+
+        fetch(CLOUD_ACCOUNTS_API, { headers: { "X-Master-Key": MASTER_KEY } })
+        .then(res => res.json())
+        .then(cloudData => {
+            let cloudProfiles = cloudData.record.user_profiles_v3 || {};
+            if (cloudProfiles[user]) {
+                localStorage.setItem("gold_balance_" + user, cloudProfiles[user].gold || "100");
+                localStorage.setItem("tor_logged_role", cloudProfiles[user].role || "player");
+                
+                (cloudProfiles[user].unlocked_games || []).forEach(gameId => {
+                    localStorage.setItem("istok_unlocked_" + gameId, "true");
+                });
+            }
+            if(document.getElementById("cloud-sync-status-badge")) document.getElementById("cloud-sync-status-badge").innerText = "☁️ Синхронизировано";
+            refreshSteamUI();
+        })
+        .catch(() => { refreshSteamUI(); });
+    }
+
+    function pushUserDataToCloudDB() {
+        let user = localStorage.getItem("tor_logged_user");
+        if (!user) return;
+
+        let myGold = parseInt(localStorage.getItem("gold_balance_" + user)) || 100;
+        let myRole = localStorage.getItem("tor_logged_role") || "player";
+        
+        let myUnlockedGames = [];
+        getAllEcosystemApps().forEach(app => {
+            if (localStorage.getItem("istok_unlocked_" + app.id) === "true") myUnlockedGames.push(app.id);
+        });
+
+        fetch(CLOUD_ACCOUNTS_API, { headers: { "X-Master-Key": MASTER_KEY } })
+        .then(res => res.json())
+        .then(cloudData => {
+            let fullRecord = cloudData.record;
+            if (!fullRecord.user_profiles_v3) fullRecord.user_profiles_v3 = {};
+            
+            fullRecord.user_profiles_v3[user] = { gold: myGold, role: myRole, unlocked_games: myUnlockedGames };
+
+            return fetch(CLOUD_ACCOUNTS_API, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
+                body: JSON.stringify(fullRecord)
+            });
+        });
+    }
+
+    function refreshSteamUI() {
+        let currentUser = localStorage.getItem("tor_logged_user");
+        let currentRole = localStorage.getItem("tor_logged_role") || "player";
+        let myGold = parseInt(localStorage.getItem("gold_balance_" + currentUser)) || 100;
+
+        document.getElementById("steam-wallet-bar").innerHTML = `🪙 БАЛАНС (${currentUser || 'Гость'}): <b style="color:#f1c40f;">$${myGold}.00</b>`;
+
+        if (currentUser) {
+            document.getElementById("profile-unauth").style.display = "none";
+            document.getElementById("profile-auth").style.display = "block";
+            document.getElementById("prof-nickname").innerText = currentUser;
+            document.getElementById("prof-role-badge").innerText = currentRole === "developer" ? "🛠️ РАЗРАБОТЧИК" : "🕹️ ИГРОК";
+            document.getElementById("prof-gold-display").innerText = `$${myGold}.00`;
+            document.getElementById("tab-link-sdk").style.display = currentRole === "developer" ? "block" : "none";
+        } else {
+            document.getElementById("profile-auth").style.display = "none";
+            document.getElementById("profile-unauth").style.display = "block";
+            document.getElementById("tab-link-sdk").style.display = "none";
+        }
+
+        renderSidebarAppList();
+        if (currentSteamTab === "sdk" || currentSteamTab === "profile") return;
+
+        let allApps = getAllEcosystemApps();
+        let app = allApps.find(a => a.id === selectedAppId);
+        
+        let filtered = getFilteredAppList();
+        if (!app || !filtered.some(a => a.id === selectedAppId)) {
+            if (filtered.length > 0) { selectedAppId = filtered.id; app = filtered; } else { app = null; }
+        }
+
+        if (!app) {
+            document.getElementById("g-detail-title").innerText = "Сектор пуст";
+            document.getElementById("g-detail-desc").innerText = "В этой категории нет доступных приложений.";
+            document.getElementById("g-detail-price-label").innerText = "";
+            document.getElementById("g-detail-action-button-slot").innerHTML = "";
+            return;
+        }
+
+        document.getElementById("g-detail-title").innerText = app.title;
+        document.getElementById("g-detail-studio").innerText = `Издатель: ${app.studio}`;
+        document.getElementById("g-detail-desc").innerText = app.desc;
+
+        let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
+        document.getElementById("g-detail-price-label").innerText = isUnlocked ? "Статус: Доступно в Библиотеке" : `Стоимость лицензии: $${app.price}.00`;
+        document.getElementById("g-detail-action-button-slot").innerHTML = isUnlocked ? 
+            `<button class="play-btn" onclick="location.href='./${app.file}?v=${Date.now()}'">ИГРАТЬ</button>` : 
+            `<button class="buy-btn" onclick="buyAppLicense('${app.id}', ${app.price})">Купить игру</button>`;
+
+        // ИСПРАВЛЕННАЯ СТИМ-ЛЕНТА: Теперь загружается строго официальный клиентский скрипт Giscus
+        let container = document.getElementById("giscus-frame-container");
+        container.innerHTML = "";
+        
+        let script = document.createElement("script");
+        script.src = "https://giscus.app"; // Точный адрес шлюза
+        script.setAttribute("data-repo", "istokdev/istok");
+        script.setAttribute("data-repo-id", "R_kgDOMm_hYg");
+        script.setAttribute("data-category", "General");
+        script.setAttribute("data-category-id", "DIC_kwDOMm_hYs4CiD8D");
+        script.setAttribute("data-mapping", "specific");
+        script.setAttribute("data-term", app.title);
+        script.setAttribute("data-reactions-enabled", "1");
+        script.setAttribute("data-emit-metadata", "0");
+        script.setAttribute("data-input-position", "bottom");
+        script.setAttribute("data-theme", "dark_dimmed");
+        script.setAttribute("data-lang", "ru");
+        script.setAttribute("crossorigin", "anonymous");
+        script.async = true;
+        
+        container.appendChild(script);
+    }
 </script>
+
 <script>
     function renderSidebarAppList() {
         let container = document.getElementById("sidebar-apps-injection-point");

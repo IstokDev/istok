@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Clicker SDK Edition</title>
+<style>
+body {
+background-color: #0d1117;
+color: #c9d1d9;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 100vh;
+margin: 0;
+user-select: none;
+}
+.game-container {
+background-color: #161b22;
+border: 2px solid #58a6ff;
+border-radius: 12px;
+padding: 30px;
+text-align: center;
+box-shadow: 0 0 20px rgba(88, 166, 255, 0.2);
+max-width: 400px;
+width: 90%;
+}
+h1 {
+color: #58a6ff;
+margin-top: 0;
+font-size: 24px;
+}
+.score-display {
+font-size: 32px;
+font-weight: bold;
+color: #7ee787;
+margin: 20px 0;
+}
+.stats {
+font-size: 14px;
+color: #8b949e;
+margin-bottom: 20px;
+}
+.click-btn {
+background: linear-gradient(135deg, #1f6feb, #58a6ff);
+color: white;
+border: none;
+padding: 15px 40px;
+font-size: 18px;
+font-weight: bold;
+border-radius: 8px;
+cursor: pointer;
+transition: transform 0.1s, box-shadow 0.2s;
+box-shadow: 0 4px 15px rgba(31, 111, 235, 0.4);
+width: 100%;
+}
+.click-btn:active {
+transform: scale(0.97);
+}
+.upgrade-section {
+margin-top: 25px;
+border-top: 1px solid #21262d;
+padding-top: 20px;
+}
+.upgrade-btn {
+background-color: #21262d;
+color: #c9d1d9;
+border: 1px solid #30363d;
+padding: 10px 15px;
+margin: 8px 0;
+border-radius: 6px;
+cursor: pointer;
+display: flex;
+justify-content: space-between;
+align-items: center;
+width: 100%;
+font-size: 14px;
+transition: background-color 0.2s;
+}
+.upgrade-btn:hover:not(:disabled) {
+background-color: #30363d;
+border-color: #8b949e;
+}
+.upgrade-btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+.upgrade-name {
+font-weight: bold;
+color: #f0f6fc;
+}
+.upgrade-cost {
+color: #f2ca30;
+}
+</style>
+</head>
+<body>
+
+<div class="game-container">
+<h1>CYBER CORE: CLICKER</h1>
+<div class="score-display"><span id="balance">0</span> 🪙</div>
+<div class="stats">
+Сила клика: +<span id="click-power">1</span> | Автокликер: +<span id="auto-power">0</span>/сек
+</div>
+
+<button class="click-btn" id="main-click-btn">МАЙНИТЬ ЧИПЫ</button>
+
+<div class="upgrade-section">
+<button class="upgrade-btn" id="upg-click" disabled>
+<span class="upgrade-name">⚡ Улучшить клик (+1)</span>
+<span class="upgrade-cost" id="cost-click">15 🪙</span>
+</button>
+
+<button class="upgrade-btn" id="upg-auto" disabled>
+<span class="upgrade-name">🤖 Нанять хакера (+1/сек)</span>
+<span class="upgrade-cost" id="cost-auto">50 🪙</span>
+</button>
+</div>
+</div>
+
+<script>
+// Игровое состояние
+let balance = 0;
+let clickPower = 1;
+let autoPower = 0;
+
+let costClick = 15;
+let costAuto = 50;
+
+// Элементы интерфейса
+const balanceEl = document.getElementById('balance');
+const clickPowerEl = document.getElementById('click-power');
+const autoPowerEl = document.getElementById('auto-power');
+const costClickEl = document.getElementById('cost-click');
+const costAutoEl = document.getElementById('cost-auto');
+
+const mainBtn = document.getElementById('main-click-btn');
+const upgClickBtn = document.getElementById('upg-click');
+const upgAutoBtn = document.getElementById('upg-auto');
+
+// Обновление кнопок (доступны для покупки или нет)
+function updateUI() {
+balanceEl.textContent = Math.floor(balance);
+clickPowerEl.textContent = clickPower;
+autoPowerEl.textContent = autoPower;
+costClickEl.textContent = costClick + ' 🪙';
+costAutoEl.textContent = costAuto + ' 🪙';
+
+upgClickBtn.disabled = balance < costClick;
+upgAutoBtn.disabled = balance < costAuto;
+}
+
+// Главный клик
+mainBtn.addEventListener('click', () => {
+balance += clickPower;
+updateUI();
+});
+
+// Покупка силы клика
+upgClickBtn.addEventListener('click', () => {
+if (balance >= costClick) {
+balance -= costClick;
+clickPower += 1;
+costClick = Math.floor(costClick * 1.5); // Увеличение цены
+updateUI();
+}
+});
+
+// Покупка автокликера
+upgAutoBtn.addEventListener('click', () => {
+if (balance >= costAuto) {
+balance -= costAuto;
+autoPower += 1;
+costAuto = Math.floor(costAuto * 1.6); // Увеличение цены
+updateUI();
+}
+});
+
+// Цикл автокликера (срабатывает каждые 100мс для плавности)
+setInterval(() => {
+if (autoPower > 0) {
+balance += autoPower / 10;
+updateUI();
+}
+}, 100);
+
+// Первичный запуск UI
+updateUI();
+</script>
+
+</body>
+</html>

@@ -165,7 +165,13 @@
         if(!container) return; container.innerHTML = "";
         document.getElementById("sidebar-group-title").innerText = currentSteamTab === "library" ? "Моя библиотека" : "Магазин лицензий";
 
-        getFilteredAppList().forEach(app => {
+        let filtered = getFilteredAppList();
+        if (filtered.length === 0) {
+            container.innerHTML = `<div style="font-size:11px; color:#859bb2; padding:5px; text-align:center;">Список пуст...</div>`;
+            return;
+        }
+
+        filtered.forEach(app => {
             let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
             let div = document.createElement("div");
             div.className = `sidebar-item ${selectedAppId === app.id ? 'active-item' : ''}`;
@@ -198,20 +204,39 @@
         renderSidebarAppList();
         if (currentSteamTab === "sdk" || currentSteamTab === "profile") return;
 
-        let app = getAllEcosystemApps().find(a => a.id === selectedAppId);
-        if (!app) return;
+        let allApps = getAllEcosystemApps();
+        let app = allApps.find(a => a.id === selectedAppId);
+        
+        let filtered = getFilteredAppList();
+        if (!app || !filtered.some(a => a.id === selectedAppId)) {
+            if (filtered.length > 0) {
+                selectedAppId = filtered[0].id;
+                app = filtered[0];
+            } else {
+                app = null;
+            }
+        }
+
+        if (!app) {
+            document.getElementById("g-detail-title").innerText = "Сектор пуст";
+            document.getElementById("g-detail-desc").innerText = "В этой категории нет доступных приложений.";
+            document.getElementById("g-detail-price-label").innerText = "";
+            document.getElementById("g-detail-action-button-slot").innerHTML = "";
+            document.getElementById("g-detail-reviews-list").innerHTML = "";
+            return;
+        }
 
         document.getElementById("g-detail-title").innerText = app.title;
         document.getElementById("g-detail-studio").innerText = `Издатель: ${app.studio}`;
         document.getElementById("g-detail-desc").innerText = app.desc;
 
         let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
-        document.getElementById("g-detail-price-label").innerText = isUnlocked ? "Статус: Доступно" : `Стоимость: $${app.price}.00`;
+        document.getElementById("g-detail-price-label").innerText = isUnlocked ? "Статус: Доступно в Библиотеке" : `Стоимость лицензии: $${app.price}.00`;
         document.getElementById("g-detail-action-button-slot").innerHTML = isUnlocked ? 
             `<button class="play-btn" onclick="location.href='./${app.file}?v=${Date.now()}'">ИГРАТЬ</button>` : 
             `<button class="buy-btn" onclick="buyAppLicense('${app.id}', ${app.price})">Купить игру</button>`;
 
-        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + app.id)) || [{ user: "ИСТОК", text: "Игра запущена." }];
+        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + app.id)) || [{ user: "Система", text: "Игра проверена, багов не обнаружено." }];
         let container = document.getElementById("g-detail-reviews-list"); container.innerHTML = "";
         reviewsData.forEach(r => {
             container.innerHTML += `<div class="review-card"><div class="review-avatar-side"><div class="review-avatar-box">👤</div></div><div class="review-text-side"><div class="review-header"><b>${r.user}</b></div><div class="review-body-text">${r.text}</div></div></div>`;
@@ -223,12 +248,14 @@
         if(!textInput.value.trim()) return alert("Введите текст обзора!");
         let currentUser = localStorage.getItem("tor_logged_user") || "Пользователь";
 
-        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + selectedAppId)) || [{ user: "ИСТОК", text: "Игра запущена." }];
+        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + selectedAppId)) || [{ user: "Система", text: "Игра проверена." }];
         reviewsData.push({ user: currentUser, text: textInput.value.trim() });
         localStorage.setItem("reviews_" + selectedAppId, JSON.stringify(reviewsData));
         textInput.value = "";
         refreshSteamUI();
     }
+</script>
+<script>
     function publishDeveloperCustomApp() {
         let title = document.getElementById("sdk-title").value.trim();
         let file = document.getElementById("sdk-file").value.trim();
@@ -236,38 +263,40 @@
         let desc = document.getElementById("sdk-desc").value.trim();
         let creatorName = localStorage.getItem("tor_logged_user") || "Unknown Dev";
 
-        if (!title || !file || !desc) return alert("Заполните поля!");
+        if (!title || !file || !desc) return alert("❌ Ошибка SDK: Заполните все поля метаданных вашей игры!");
 
         let customApps = JSON.parse(localStorage.getItem("istok_published_apps_v3")) || [];
         customApps.push({ id: "custom_app_" + Date.now(), file: file, title: title, price: price, studio: creatorName, developer: creatorName, desc: desc });
         localStorage.setItem("istok_published_apps_v3", JSON.stringify(customApps));
         
-        alert(`🚀 Успешно выпущено! Студия: ${creatorName}.`);
+        alert(`🚀 SDK ИСТОК: Игра "${title}" успешно выпущена в Магазин! Студия: ${creatorName}.`);
         document.getElementById("sdk-title").value = ""; document.getElementById("sdk-file").value = ""; document.getElementById("sdk-desc").value = ""; document.getElementById("sdk-price").value = "0";
         refreshSteamUI(); switchSteamTab('store');
     }
 
     function buyAppLicense(appId, price) {
-        let buyer = localStorage.getItem("tor_logged_user"); if(!buyer) return alert("Войдите в профиль!");
+        let buyer = localStorage.getItem("tor_logged_user"); if(!buyer) return alert("❌ Зарегистрируйте аккаунт во вкладке Профиль!");
         let buyerGold = parseInt(localStorage.getItem("gold_balance_" + buyer)) || 0;
-        if (buyerGold < price) return alert("Недостаточно монет! Сыграйте в Монополию.");
+        if (buyerGold < price) return alert("❌ Недостаточно средств! Выиграйте раунд в Монополии, чтобы получить +$300 монет.");
 
         buyerGold -= price; localStorage.setItem("gold_balance_" + buyer, buyerGold);
-        let app = getAllEcosystemApps().find(a => a.id === appId);
-        if (app.developer && app.developer !== "system") {
+        let allApps = getAllEcosystemApps();
+        let app = allApps.find(a => a.id === appId);
+        if (app && app.developer && app.developer !== "system") {
             let authGold = parseInt(localStorage.getItem("gold_balance_" + app.developer)) || 0;
             localStorage.setItem("gold_balance_" + app.developer, authGold + price);
         }
 
         localStorage.setItem("istok_unlocked_" + appId, "true"); localStorage.setItem("hub_global_gold", buyerGold);
-        alert(`🎉 Лицензия куплена! Деньги переведены студии: ${app.studio}`); refreshSteamUI();
+        alert(`🎉 Лицензия куплена! Деньги переведены студии: ${app.studio}`); 
+        refreshSteamUI();
     }
 
     function handleHubLogin() {
         let name = document.getElementById("reg-username-input").value.trim(); if (!name) return alert("Введите никнейм!");
         localStorage.setItem("tor_logged_user", name); localStorage.setItem("tor_logged_role", loginRoleSelection);
         if (!localStorage.getItem("gold_balance_" + name)) localStorage.setItem("gold_balance_" + name, "100");
-        alert("Вход выполнен!"); refreshSteamUI(); switchSteamTab('store');
+        alert("Вход выполнен!"); refreshSteamUI(); switchSteamTab('library');
     }
     
     function handleHubLogout() { localStorage.removeItem("tor_logged_user"); localStorage.removeItem("tor_logged_role"); location.reload(); }
@@ -281,10 +310,15 @@
         document.getElementById("active-game-detail-view").style.display = (tabKey !== "sdk" && tabKey !== "profile") ? "flex" : "none";
         document.getElementById("active-sdk-view").style.display = tabKey === "sdk" ? "flex" : "none";
         document.getElementById("active-profile-view").style.display = tabKey === "profile" ? "flex" : "none";
-        if(tabKey !== "sdk" && tabKey !== "profile") { let apps = getFilteredAppList(); if (apps.length > 0) selectedAppId = apps[0].id; }
+        
+        let apps = getFilteredAppList(); 
+        if (apps.length > 0) {
+            selectedAppId = apps[0].id;
+        } else {
+            selectedAppId = "";
+        }
         refreshSteamUI();
     }
 </script>
 </body>
 </html>
-

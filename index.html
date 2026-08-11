@@ -173,51 +173,34 @@
         </div>
     </div>
 
-    <!-- Вкладка: Опубликовать игру -->
+        <!-- Вкладка: Опубликовать игру -->
     <div id="publish-tab" class="tab-content">
         <h2 style="color: #66c0f4;">📤 Опубликовать игру</h2>
         <p style="color: #9aa7b8; margin-bottom: 20px;">
             Заполните форму — и мы добавим вашу игру в магазин!
         </p>
 
-        <form id="game-upload-form" onsubmit="return false;" style="display: grid; gap: 15px;">
-            <div>
-                <label style="color: #eee;">Название игры</label>
-                <input type="text" id="game-title" required>
-            </div>
-            <div>
-                <label style="color: #eee;">Описание</label>
-                <textarea id="game-desc" rows="3" required></textarea>
-            </div>
-            <div>
-                <label style="color: #eee;">Жанр</label>
-                <select id="game-genre">
-                    <option>аркада</option>
-                    <option>головоломка</option>
-                    <option>стратегия</option>
-                    <option>платформер</option>
-                    <option>мини-игра</option>
-                    <option>другое</option>
-                </select>
-            </div>
-            <div>
-                <label style="color: #eee;">Цена ($)</label>
-                <input type="number" id="game-price" value="0" min="0" step="0.5">
-            </div>
-            <div>
-                <label style="color: #eee;">Файл игры (.html)</label>
-                <input type="file" id="game-file" accept=".html" required>
-            </div>
-            <div>
-                <label style="color: #eee;">Ваш никнейм</label>
-                <input type="text" id="game-developer" required>
-            </div>
-            <button onclick="submitGameForm()" style="background: #66c0f4;">📤 Отправить на проверку</button>
-        </form>
+        <!-- Внешняя Яндекс.Форма -->
+        <div style="background: #1a2238; padding: 20px; border-radius: 10px; margin-top: 10px;">
+            <p style="color: #9aa7b8; margin-bottom: 15px; line-height: 1.5;">
+                ✅ Заполните форму ниже — заявка придет напрямую разработчику Istok.<br>
+                ⚠️ Прикрепите <code>game.html</code> или ZIP-архив с игрой.
+            </p>
 
-        <div id="form-result" style="margin-top: 20px; padding: 15px; border-radius: 6px; display: none;"></div>
+            <!-- Подключаем скрипт Яндекс.Форм -->
+            <script src="https://forms.yandex.ru/_static/embed.js" async></script>
+
+            <!-- Адаптивный iframe с формой -->
+            <div style="position: relative; padding-bottom: 120%; height: 0; overflow: hidden; max-width: 100%;">
+                <iframe 
+                    src="https://forms.yandex.ru/u/6a7b6b731f1eb50e5b0deb06?iframe=1" 
+                    frameborder="0" 
+                    name="ya-form-6a7b6b731f1eb50e5b0deb06" 
+                    style="position: absolute; width: 100%; height: 100%; left: 0; top: 0; border: none; border-radius: 8px;">
+                </iframe>
+            </div>
+        </div>
     </div>
-
     <script>
         // Глобальные переменные
         let balance = 100.0;
@@ -341,36 +324,6 @@
             updateProfile();
         }
 
-        // Форма: отправка
-        function submitGameForm() {
-            const title = document.getElementById('game-title').value.trim();
-            const desc = document.getElementById('game-desc').value.trim();
-            const genre = document.getElementById('game-genre').value;
-            const price = parseFloat(document.getElementById('game-price').value);
-            const file = document.getElementById('game-file').files[0];
-            const developer = document.getElementById('game-developer').value.trim();
-            const resultDiv = document.getElementById('form-result');
-
-            if (!title || !desc || !file || !developer) {
-                resultDiv.style.display = 'block';
-                resultDiv.className = 'status error';
-                resultDiv.textContent = '❌ Заполните все поля!';
-                return;
-            }
-
-            resultDiv.style.display = 'block';
-            resultDiv.className = 'status success';
-            resultDiv.innerHTML = `
-                ✅ Форма отправлена!<br>
-                Игра: <b>${title}</b><br>
-                Разработчик: <b>${developer}</b><br><br>
-                📬 Я получил вашу заявку. Через 1–2 дня игра появится в магазине!
-            `;
-
-            // Сброс формы
-            document.getElementById('game-upload-form').reset();
-        }
-
         // Инициализация
         window.onload = function () {
             updateProfile();
@@ -379,3 +332,4 @@
     </script>
 </body>
 </html>
+

@@ -3,261 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ИСТОК (ISTOK Client)</title>
+    <title>ИСТОК (Steam Developer & Player Platform)</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { background: #171a21; color: #c6d4df; font-family: 'Motiva Sans', sans-serif, Arial; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+        body { background: #1b2838; color: #c6d4df; font-family: "Motiva Sans", Arial, sans-serif; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
         
-        /* Главное Стим-Меню Навигации */
-        header { width: 100%; background: #171d25; height: 50px; border-bottom: 1px solid #222b35; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 100; }
-        .logo { font-size: 22px; font-weight: bold; letter-spacing: 2px; color: #fff; text-transform: uppercase; cursor: pointer; }
-        .logo span { color: #1a9fff; text-shadow: 0 0 10px rgba(26,159,255,0.4); }
+        /* Верхний навигационный бар Steam */
+        header { width: 100%; background: #171a21; padding: 0 30px; height: 65px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.6); border-bottom: 1px solid #2a475e; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: 2px; color: #fff; text-transform: uppercase; font-family: sans-serif; cursor: pointer; }
+        .logo span { color: #66c0f4; text-shadow: 0 0 10px rgba(102,192,244,0.4); }
         
-        nav { display: flex; gap: 20px; }
-        .nav-link { color: #b8b6b4; text-decoration: none; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 18px 0; border-bottom: 3px solid transparent; transition: 0.1s; }
+        nav { display: flex; gap: 30px; height: 100%; align-items: center; }
+        .nav-link { color: #b8b6b4; text-decoration: none; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 21px 0; border-bottom: 3px solid transparent; transition: color 0.1s, border-color 0.1s; }
         .nav-link:hover, .nav-link.active-tab { color: #fff; border-color: #1a9fff; }
         
-        .steam-wallet { font-size: 11px; background: #222b35; padding: 6px 14px; border-radius: 3px; border: 1px solid #2a3542; display: flex; align-items: center; gap: 8px; color: #1a9fff; font-weight: bold; }
+        .wallet-widget { font-size: 12px; background: #222b35; padding: 8px 16px; border-radius: 2px; border: 1px solid #2a3542; display: flex; align-items: center; gap: 10px; color: #66c0f4; font-family: monospace; font-weight: bold; }
         
-        /* Layout ИСТОК Клиента: Боковая панель + Главное Окно */
-        .steam-main-layout { display: flex; flex: 1; height: calc(100vh - 50px); width: 100vw; }
+        /* Главный двухпанельный интерфейс */
+        .steam-main-layout { display: flex; flex: 1; height: calc(100vh - 65px); width: 100vw; }
         
-        /* Левая Колонка (Моя Библиотека / Каталог) */
-        .steam-sidebar { width: 260px; background: #1b2838; border-right: 1px solid #233c51; display: flex; flex-direction: column; padding: 15px 10px; gap: 10px; overflow-y: auto; }
+        /* Боковое меню */
+        .steam-sidebar { width: 260px; background: #171d25; border-right: 1px solid #233c51; display: flex; flex-direction: column; padding: 15px 10px; gap: 10px; overflow-y: auto; }
         .sidebar-search { background: #223246; border: 1px solid #2a475e; border-radius: 3px; padding: 6px 10px; color: #fff; font-size: 12px; outline: none; width: 100%; }
         .sidebar-section-title { font-size: 10px; font-weight: bold; color: #1a9fff; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
         .sidebar-list { display: flex; flex-direction: column; gap: 2px; }
-        .sidebar-item { padding: 6px 10px; font-size: 13px; color: #c6d4df; border-radius: 3px; cursor: pointer; transition: 0.1s; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-item { padding: 8px 10px; font-size: 13px; color: #c6d4df; border-radius: 3px; cursor: pointer; transition: 0.1s; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
         .sidebar-item.active-item { background: #1a9fff !important; color: #fff !important; font-weight: bold; }
         .sidebar-lock-icon { font-size: 10px; opacity: 0.6; }
-        /* Правая центральная панель */
-        .steam-content-window { flex: 1; background: #171d25; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+
+        /* Главное окно Steam */
+        .steam-content-window { flex: 1; background: #1b2838; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         
-        /* Баннер игры */
-        .game-hero-banner { background: linear-gradient(180deg, #2a475e 0%, #1b2838 100%); border-radius: 4px; padding: 25px; border: 1px solid rgba(255,255,255,0.02); box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 10px; position: relative; }
+        /* Карточка игры */
+        .game-hero-banner { background: linear-gradient(180deg, #2a475e 0%, #171d25 100%); border-radius: 4px; padding: 25px; border: 1px solid rgba(255,255,255,0.02); box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 10px; position: relative; }
         .game-hero-title { font-size: 26px; font-weight: bold; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .game-hero-studio { font-size: 10px; font-weight: bold; color: #f1c40f; text-transform: uppercase; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 3px; align-self: flex-start; }
         .game-hero-desc { font-size: 13px; color: #acb2b8; line-height: 1.6; max-width: 700px; }
-        
-        /* Знаменитая ЗЕЛЕНАЯ КНОПКА ИГРАТЬ / КУПИТЬ */
-        .steam-action-bar { background: #1b2838; border-radius: 4px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #233c51; margin-top: 5px; }
+        .studio-badge { font-size: 9px; font-weight: bold; color: #f1c40f; text-transform: uppercase; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 2px; align-self: flex-start; margin-bottom: 2px; }
+        .studio-avatar { width: 70px; height: 70px; background: #171a21; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 28px; border: 1px solid #2a475e; }
+        .app-info-block { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+
+        /* Зеленая кнопка «ИГРАТЬ» */
+        .steam-action-bar { background: #171d25; border-radius: 4px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #233c51; margin-top: 5px; }
         .price-text { font-size: 18px; font-weight: bold; color: #fff; }
-        .play-btn { background: linear-gradient(to right, #75b022, #588a1b); border: none; color: #fff; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; transition: 0.1s; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-        .play-btn:hover { background: linear-gradient(to right, #8ed629, #699e22); transform: scale(1.02); }
-        .buy-btn { background: linear-gradient(to right, #1a9fff, #1078c2); border: none; color: #fff; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; transition: 0.1s; }
-        .buy-btn:hover { background: linear-gradient(to right, #2ca9ff, #158be0); transform: scale(1.02); }
-        
-        /* Блок Кастомной Ленты Рецензий */
+        .play-btn { background: linear-gradient(to bottom, #a4e02e 0%, #6aa21e 100%); border: none; color: #fff; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
+        .play-btn:hover { background: linear-gradient(to bottom, #bbf237 0%, #7dbf22 100%); filter: brightness(1.1); }
+        .buy-btn { background: linear-gradient(to bottom, #214b6b 0%, #12293d 100%); border: 1px solid #66c0f4; color: #fff; padding: 12px 35px; font-size: 14px; font-weight: bold; border-radius: 2px; text-transform: uppercase; cursor: pointer; }
+        .buy-btn:hover { background: #66c0f4; color: #000; }
+
+        /* Стим-Переключатель Ролей */
+        .role-selector { display: flex; gap: 10px; margin: 10px 0; width: 100%; }
+        .role-option { flex: 1; padding: 12px; text-align: center; border: 1px solid #2a475e; border-radius: 4px; cursor: pointer; font-weight: bold; background: #171d25; color: #b8b6b4; font-size: 12px; }
+        .role-option:hover { border-color: #66c0f4; color: #fff; }
+        .active-role { background: #2a475e !important; border-color: #66c0f4 !important; color: #fff !important; box-shadow: 0 0 10px rgba(102,192,244,0.2); }
+
+        /* Отзывы */
         .steam-reviews-panel { display: flex; flex-direction: column; gap: 15px; }
         .reviews-section-title { font-size: 14px; font-weight: bold; color: #fff; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #233c51; padding-bottom: 6px; }
-        
         .review-card { background: rgba(0,0,0,0.2); border: 1px solid #223246; border-radius: 4px; padding: 15px; display: flex; gap: 15px; }
-        .review-avatar-side { width: 50px; text-align: center; }
         .review-avatar-box { width: 42px; height: 45px; background: #2a475e; border-radius: 3px; border: 2px solid #1a9fff; display: flex; justify-content: center; align-items: center; font-size: 20px; }
         .review-text-side { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .review-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
-        .review-stars { color: #f1c40f; font-weight: bold; }
-        .review-body-text { font-size: 12px; color: #acb2b8; line-height: 1.5; text-align: left; }
-        
-        /* Форма написания отзыва */
-        .write-review-box { background: #1b2838; border: 1px solid #2a475e; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .steam-textarea { background: #171d25; border: 1px solid #2a475e; border-radius: 3px; padding: 10px; color: #fff; font-size: 13px; outline: none; height: 70px; resize: none; width: 100%; }
-        .steam-textarea:focus { border-color: #1a9fff; }
-        .steam-select { background: #171d25; border: 1px solid #2a475e; color: #f1c40f; font-size: 12px; padding: 6px 12px; border-radius: 3px; outline: none; }
-        
-        .submit-btn { background: #2a475e; border: 1px solid #1a9fff; color: #fff; padding: 12px; font-weight: bold; font-size: 12px; text-transform: uppercase; cursor: pointer; border-radius: 2px; }
-        .submit-btn:hover { background: #1a9fff; color: #000; }
-        .ach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .ach-card { background: #1b2838; border: 1px solid #2a475e; border-radius: 4px; padding: 12px; display: flex; align-items: center; gap: 12px; }
+        .write-review-box { background: #171d25; border: 1px solid #2a475e; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .steam-textarea { background: #1b2838; border: 1px solid #2a475e; border-radius: 3px; padding: 10px; color: #fff; font-size: 13px; outline: none; height: 65px; resize: none; }
+        .submit-btn { background: #2a475e; border: 1px solid #66c0f4; color: #fff; padding: 12px; font-weight: bold; font-size: 12px; text-transform: uppercase; cursor: pointer; border-radius: 2px; width: 100%; }
+        .submit-btn:hover { background: #66c0f4; color: #000; }
+        input, select { background: #171d25; border: 1px solid #2a475e; border-radius: 3px; padding: 12px; color: #fff; font-size: 14px; outline: none; width: 100%; margin-bottom: 8px; }
     </style>
 </head>
 <body>
-    <!-- ВЕРХНИЙ СТИМ-БАР -->
+    <!-- ВЕРХНИЙ БАР ИСТОКА -->
     <header>
-        <div class="logo" onclick="switchSteamTab('store')">🌀 ИСТОК</div>
+        <div class="logo" onclick="switchSteamTab('store')">🌐 ИСТОК</div>
         <nav>
             <div id="tab-link-store" class="nav-link active-tab" onclick="switchSteamTab('store')">Магазин</div>
             <div id="tab-link-library" class="nav-link" onclick="switchSteamTab('library')">Библиотека</div>
+            <div id="tab-link-sdk" class="nav-link" onclick="switchSteamTab('sdk')" style="display:none; color:#f1c40f;">🛠️ Панель SDK</div>
             <div id="tab-link-profile" class="nav-link" onclick="switchSteamTab('profile')">Профиль</div>
         </nav>
-        <div class="steam-wallet" id="client-wallet-bar">
-            <span>🪙 Кошелек: <b>$0</b></span>
-        </div>
+        <div class="wallet-widget" id="steam-wallet-bar"><span>🪙 БАЛАНС: <b>$0</b></span></div>
     </header>
 
-    <!-- ОСНОВНОЙ ПОРТАЛ С ТЕКСТУРОЙ STEAM -->
     <div class="steam-main-layout">
-        
-        <!-- ЛЕВАЯ КОЛОНКА ИГР (БОКОВАЯ ПАНЕЛЬ) -->
+        <!-- БОКОВАЯ ПАНЕЛЬ СТИМА -->
         <div class="steam-sidebar">
             <input type="text" class="sidebar-search" id="sidebar-app-search" placeholder="Поиск по играм..." oninput="renderSidebarAppList()">
-            
-            <div class="sidebar-section-title" id="sidebar-group-title">Игры на платформе</div>
-            <div class="sidebar-list" id="sidebar-apps-injection-point">
-                <!-- Сюда JS выведет интерактивные списки игр -->
-            </div>
+            <div class="sidebar-section-title" id="sidebar-group-title">Игры</div>
+            <div class="sidebar-list" id="sidebar-apps-injection-point"></div>
         </div>
 
-        <!-- ПРАВОЕ ОКНО ДЕТАЛИЗАЦИИ ИГРЫ -->
+        <!-- ГЛАВНОЕ ОКНО СТИМА -->
         <div class="steam-content-window" id="steam-central-viewport">
-            <!-- ДЕТАЛИЗАЦИЯ ИГРЫ (ГЕНЕРИРУЕТСЯ ИЗ БАЗЫ JS) -->
+            
+            <!-- СТИМ КАРТОЧКА ПРОДУКТА -->
             <div id="active-game-detail-view" style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
                 <div class="game-hero-banner">
                     <div class="studio-badge" id="g-detail-studio">ИСТОК CORE</div>
-                    <h2 class="game-hero-title" id="g-detail-title">Загрузка игры...</h2>
-                    <p class="game-hero-desc" id="g-detail-desc">Выберите игру из левой боковой панели Стим-клиента, чтобы открыть карточку товара.</p>
+                    <h2 class="game-hero-title" id="g-detail-title">Загрузка...</h2>
+                    <p class="game-hero-desc" id="g-detail-desc">Выберите продукт...</p>
                 </div>
-
                 <div class="steam-action-bar">
-                    <div class="price-text" id="g-detail-price-label">Статус: Бесплатно</div>
-                    <div id="g-detail-action-button-slot">
-                        <button class="play-btn">ИГРАТЬ</button>
-                    </div>
+                    <div class="price-text" id="g-detail-price-label">Цена: $0</div>
+                    <div id="g-detail-action-button-slot"></div>
                 </div>
-
-                <!-- ЛЕНТА РЕЦЕНЗИЙ -->
                 <div class="steam-reviews-panel">
-                    <div class="reviews-section-title">💬 Пользовательские рецензии в ИСТОКЕ</div>
-                    <div style="display: flex; flex-direction: column; gap: 10px;" id="g-detail-reviews-list">
-                        <!-- Сюда вставляются Стим-отзывы -->
-                    </div>
-                    
+                    <div class="reviews-section-title">💬 Обзоры игроков</div>
+                    <div style="display: flex; flex-direction: column; gap: 10px;" id="g-detail-reviews-list"></div>
                     <div class="write-review-box">
-                        <div style="font-size:12px; font-weight:bold; color:#1a9fff; margin-bottom:2px;">ОСТАВИТЬ РЕЦЕНЗИЮ НА ПРОДУКТ:</div>
-                        <textarea id="review-textarea-field" class="steam-textarea" placeholder="Напишите честное мнение о качестве D&D баланса и механик..."></textarea>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <select id="review-stars-field" class="steam-select">
-                                <option value="5">⭐⭐⭐⭐★ (5/5)</option><option value="4">⭐⭐⭐⭐☆ (4/5)</option>
-                                <option value="3">⭐⭐⭐☆☆ (3/5)</option>
-                            </select>
-                            <button class="play-btn" style="padding:8px 20px; font-size:11px;" onclick="postLiveSteamReview()">Опубликовать отзыв</button>
-                        </div>
+                        <textarea id="review-textarea-field" class="steam-textarea" placeholder="Напишите честный обзор..."></textarea>
+                        <button class="play-btn" style="padding:8px 20px; font-size:11px;" onclick="postLiveSteamReview()">Отправить обзор</button>
                     </div>
                 </div>
             </div>
 
-            <!-- ВКЛАДКА ЛИЧНОГО ПРОФИЛЯ СТИМ -->
-            <div id="active-profile-view" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
-                <div class="game-hero-banner" style="background:#223246;">
-                    <h2 class="game-hero-title" style="color:#1a9fff;">Профиль: Ирина</h2>
-                    <p style="font-size:13px; color:#fff; margin-top:5px;">Уровень аккаунта Steam: <b style="color:#75b022;">Ур. 15 (Мастер Кода)</b></p>
+            <!-- ЗОНА СДК РАЗРАБОТЧИКА -->
+            <div id="active-sdk-view" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
+                <div class="game-hero-banner" style="background: linear-gradient(180deg, #171d25 0%, #0f141c 100%); border-color: #66c0f4;">
+                    <h2 class="game-hero-title" style="color: #66c0f4;">🛠️ ИСТОК SDK Console</h2>
+                    <p class="game-hero-desc">Выпускайте свои `.html` игры на платформу, устанавливайте ценники и зарабатывайте внутриигровую валюту с каждой покупки вашей лицензии Игроками [1.3]!</p>
                 </div>
-                <div class="steam-panel" style="background:#1b2838; margin:0;">
-                    <div class="panel-title">🏆 Достижения Аккаунта (Achievements)</div>
-                    <div class="ach-grid">
-                        <div class="ach-card"><div style="font-size:24px;">💰</div><div><b>Мастер Торгов</b><br><span style="font-size:11px; color:#859bb2;">Заработайте премию +$300 золота в Монополии.</span></div></div>
-                        <div class="ach-card" style="border-color:#75b022; background:#1c271e;"><div style="font-size:24px;">🛠️</div><div style="color:#75b022;"><b>Инди-Издатель</b><br><span style="font-size:11px; color:#859bb2;">Успешно выложите sand;boxx через games.json.</span></div></div>
+                <div class="steam-panel" style="margin:0;">
+                    <div class="panel-title">Релиз нового Сектора на витрину</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <input type="text" id="sdk-title" placeholder="Название игры (Например: Моя Арена)...">
+                        <input type="text" id="sdk-file" placeholder="Точное имя .html файла (Например: arena.html)...">
                     </div>
-                    <button class="submit-btn" style="margin-top:20px; border-color:#e74c3c; color:#e74c3c; background:none;" onclick="localStorage.clear(); location.reload();">💥 Полный сброс клиента ИСТОК</button>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <input type="number" id="sdk-price" placeholder="Цена в магазине (0 - бесплатно)..." value="0">
+                        <textarea id="sdk-desc" class="steam-textarea" style="height:45px;" placeholder="Краткое описание геймплея..."></textarea>
+                    </div>
+                    <button class="play-btn" style="width:100%; margin-top:10px; background: linear-gradient(to right, #66c0f4, #1a9fff);" onclick="publishDeveloperCustomApp()">🚀 ВЫПУСТИТЬ ИГРУ В МАГАЗИН</button>
+                </div>
+            </div>
+            <!-- ОКНО АВТОРЫ/ПРОФИЛЯ -->
+            <div id="active-profile-view" style="display: none; flex-direction: column; gap: 20px; width: 100%;">
+                <!-- ФОРМА ВХОДА И ВЫБОР РОЛИ -->
+                <div class="steam-panel" id="profile-unauth">
+                    <div class="panel-title">Регистрация аккаунта ИСТОК</div>
+                    <div style="width: 340px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px;">
+                        <input type="text" id="reg-username-input" placeholder="Введите ваш Стим-ID никнейм...">
+                        <div class="role-selector">
+                            <div id="role-player" class="role-option active-role" onclick="selectLoginRole('player')">🕹️ Я Игрок</div>
+                            <div id="role-dev" class="role-option" onclick="selectLoginRole('developer')">🛠️ Я Разработчик</div>
+                        </div>
+                        <button class="submit-btn" onclick="handleHubLogin()">Создать Профиль</button>
+                    </div>
+                </div>
+                <!-- ЛИСТ УЧЕТКИ -->
+                <div class="steam-panel" id="profile-auth" style="display:none; margin:0;">
+                    <div class="panel-title">Личный Кабинет сети</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div>Залогинен под ID: <b id="prof-nickname" style="color:#66c0f4;">Игрок</b></div>
+                        <div>Тип Аккаунта: <b id="prof-role-badge" style="color:#f1c40f;">ИГРОК</b></div>
+                        <div>Счёт в банке: <b id="prof-gold-display" style="color:#2ecc71;">$0</b></div>
+                        <button class="submit-btn" style="width:130px; border-color:#e74c3c; color:#e74c3c; background:none; margin-top:15px;" onclick="handleHubLogout()">Выйти из сети</button>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
+
 <script>
-    // ЖЕЛЕЗНАЯ СТИМ-БАЗА ДАННЫХ: Идеально синхронизирована с твоими файлами
-    const istokAppCatalog = [
-        { id: "monopoly", file: "monopoly.html", title: "Супер-Плавная Монополия", price: 0, studio: "ИСТОК CORE", desc: "Экономическая настольная стратегия 60 FPS. Пошаговые скользящие шаги фишек, анимированные кости, жесткие законы Тюрьмы и яростные Аукционы за недвижимость! Обанкроть ИИ-Бота и забери куш." },
-        { id: "sandboxx", file: "sandboxx.html", title: "sand;boxx", price: 0, studio: "1gamestydio", desc: "Твоя собственная интерактивная оффлайн-песочница. Полная свобода действий, крафт предметов и кастомные D&D-испытания без ограничений!" },
-        { id: "taiga", file: "taigaRPG.html", title: "Свитки Судьбы: ТАЙГА (Премиум)", price: 10, studio: "Irina Games Studio", desc: "Хардкорный текстовый симулятор выживания в лесу Сибири по канонам 5e. Сбалансированный игровой процесс, короткий сон на 1 минуту, лечение строго через костры и охоту дичи кубиками d20." }
+    // Стартовый неизменяемый пак ИСТОКА
+    const defaultApps = [
+        { id: "monopoly", file: "monopoly.html", title: "Супер-Плавная Монополия", price: 0, studio: "ИСТОК CORE", developer: "system", desc: "Настольный экономический стол 60 FPS. Скупайте улицы, устраивайте Аукционы. За победу над Ботом выдается премия +$300 золота!" },
+        { id: "sandboxx", file: "sandboxx.html", title: "sand;boxx", price: 0, studio: "1gamestydio", developer: "system", desc: "Твоя собственная интерактивная оффлайн-песочница. Полная свобода действий, крафт и кастомные D&D-испытания без ограничений!" }
     ];
 
-    let currentSteamTab = "store"; // "store", "library", "profile"
-    let selectedAppId = "monopoly"; // По умолчанию открыта Монополия
-    let steamGold = parseInt(localStorage.getItem("hub_global_gold"));
-    if (isNaN(steamGold)) { steamGold = 100; localStorage.setItem("hub_global_gold", steamGold); }
+    let currentSteamTab = "store"; 
+    let selectedAppId = "monopoly";
+    let loginRoleSelection = "player"; // Буфер роли ("player" или "developer")
 
     document.addEventListener("DOMContentLoaded", () => {
         refreshSteamUI();
     });
 
-    function switchSteamTab(tabKey) {
-        currentSteamTab = tabKey;
-        
-        ['store', 'library', 'profile'].forEach(k => document.getElementById("tab-link-" + k).classList.remove("active-tab"));
-        document.getElementById("tab-link-" + tabKey).classList.add("active-tab");
+    function selectLoginRole(roleKey) {
+        loginRoleSelection = roleKey;
+        document.getElementById("role-player").classList.remove("active-role");
+        document.getElementById("role-dev").classList.remove("active-role");
+        document.getElementById("role-" + roleKey).classList.add("active-role");
+    }
 
-        if (tabKey === "profile") {
-            document.getElementById("active-game-detail-view").style.display = "none";
-            document.getElementById("active-profile-view").style.display = "flex";
-        } else {
-            document.getElementById("active-game-detail-view").style.display = "flex";
-            document.getElementById("active-profile-view").style.display = "none";
-            
-            // Сбрасываем выбранную игру под категорию вкладки
-            let apps = getFilteredAppList();
-            if (apps.length > 0) selectedAppId = apps[0].id;
-        }
-        refreshSteamUI();
+    function getAllEcosystemApps() {
+        let customApps = JSON.parse(localStorage.getItem("istok_published_apps_v3")) || [];
+        return [...defaultApps, ...customApps];
     }
 
     function getFilteredAppList() {
         let searchQ = document.getElementById("sidebar-app-search").value.toLowerCase();
-        return istokAppCatalog.filter(app => {
+        let allApps = getAllEcosystemApps();
+
+        return allApps.filter(app => {
             let matchesSearch = app.title.toLowerCase().includes(searchQ);
             if (!matchesSearch) return false;
-            
+
             let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
-            if (currentSteamTab === "library") return isUnlocked; // В библиотеке только бесплатные/купленные
-            if (currentSteamTab === "store") return !isUnlocked;  // В магазине только платные/закрытые
+            if (currentSteamTab === "library") return isUnlocked;
+            if (currentSteamTab === "store") return !isUnlocked;
             return true;
         });
     }
-
-    // ОТРИСОВКА БОКОВОЙ ПАНЕЛИ СТИМА
+</script>
+<script>
     function renderSidebarAppList() {
         let container = document.getElementById("sidebar-apps-injection-point");
-        if(!container) return;
-        container.innerHTML = "";
+        if(!container) return; container.innerHTML = "";
+        document.getElementById("sidebar-group-title").innerText = currentSteamTab === "library" ? "Моя библиотека" : "Магазин лицензий";
 
-        document.getElementById("sidebar-group-title").innerText = currentSteamTab === "library" ? "Мои игры" : "Доступно в магазине";
-
-        let filteredApps = getFilteredAppList();
-        
-        if (filteredApps.length === 0) {
+        let filtered = getFilteredAppList();
+        if (filtered.length === 0) {
             container.innerHTML = `<div style="font-size:11px; color:#859bb2; padding:5px; text-align:center;">Список пуст...</div>`;
             return;
         }
-
-        filteredApps.forEach(app => {
+        filtered.forEach(app => {
             let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
             let div = document.createElement("div");
             div.className = `sidebar-item ${selectedAppId === app.id ? 'active-item' : ''}`;
             div.innerText = app.title;
-            
             if(!isUnlocked) div.innerHTML += ` <span class="sidebar-lock-icon">🔒</span>`;
-            
-            div.onclick = () => {
-                selectedAppId = app.id;
-                refreshSteamUI();
-            };
+            div.onclick = () => { selectedAppId = app.id; refreshSteamUI(); };
             container.appendChild(div);
         });
     }
 
-    // ОБНОВЛЕНИЕ ГЛАВНОГО ОКНА ДЕТАЛИЗАЦИИ ИГРЫ
     function refreshSteamUI() {
-        localStorage.setItem("hub_global_gold", steamGold);
-        document.getElementById("client-wallet-bar").innerHTML = `🪙 Баланс Кошелька: <b>$${steamGold}</b>`;
+        let currentUser = localStorage.getItem("tor_logged_user");
+        let currentRole = localStorage.getItem("tor_logged_role") || "player";
+        
+        let myGold = parseInt(localStorage.getItem("gold_balance_" + currentUser)) || 100;
+        document.getElementById("steam-wallet-bar").innerHTML = `🪙 БАЛАНС (${currentUser || 'Гость'}): <b style="color:#f1c40f;">$${myGold}.00</b>`;
+
+        if (currentUser) {
+            document.getElementById("profile-unauth").style.display = "none";
+            document.getElementById("profile-auth").style.display = "block";
+            document.getElementById("prof-nickname").innerText = currentUser;
+            document.getElementById("prof-role-badge").innerText = currentRole === "developer" ? "🛠️ РАЗРАБОТЧИК / СТУДИЯ" : "🕹️ ИГРОК";
+            document.getElementById("prof-gold-display").innerText = `$${myGold}.00`;
+            
+            document.getElementById("tab-link-sdk").style.display = currentRole === "developer" ? "block" : "none";
+        } else {
+            document.getElementById("profile-auth").style.display = "none";
+            document.getElementById("profile-unauth").style.display = "block";
+            document.getElementById("tab-link-sdk").style.display = "none";
+        }
 
         renderSidebarAppList();
-        if (currentSteamTab === "profile") return;
+        if (currentSteamTab === "sdk" || currentSteamTab === "profile") return;
 
-        let app = istokAppCatalog.find(a => a.id === selectedAppId);
+        let allApps = getAllEcosystemApps();
+        let app = allApps.find(a => a.id === selectedAppId);
         if (!app) {
-            // Если в категории нет игр
-            document.getElementById("g-detail-title").innerText = "Игры отсутствуют";
-            document.getElementById("g-detail-desc").innerText = "В данной вкладке нет доступных Секторов приложений.";
+            document.getElementById("g-detail-title").innerText = "Сектор пуст";
+            document.getElementById("g-detail-desc").innerText = "В этой категории нет доступных приложений.";
             document.getElementById("g-detail-price-label").innerText = "";
             document.getElementById("g-detail-action-button-slot").innerHTML = "";
             document.getElementById("g-detail-reviews-list").innerHTML = "";
             return;
         }
 
-        // Заполняем данные карточки игры
         document.getElementById("g-detail-title").innerText = app.title;
-        document.getElementById("g-detail-studio").innerText = `Студия: ${app.studio}`;
+        document.getElementById("g-detail-studio").innerText = `Издатель: ${app.studio}`;
         document.getElementById("g-detail-desc").innerText = app.desc;
 
         let isUnlocked = app.price === 0 || localStorage.getItem("istok_unlocked_" + app.id) === "true";
@@ -265,54 +271,124 @@
         let priceLabel = document.getElementById("g-detail-price-label");
 
         if (isUnlocked) {
-            priceLabel.innerText = "Статус: В Библиотеке";
-            priceLabel.style.color = "#75b022";
+            priceLabel.innerText = "Статус: Доступно в Библиотеке"; priceLabel.style.color = "#a4e02e";
             btnSlot.innerHTML = `<button class="play-btn" onclick="location.href='./${app.file}?v=${Date.now()}'">ИГРАТЬ</button>`;
         } else {
-            priceLabel.innerText = `Стоимость лицензии: $${app.price}`;
-            priceLabel.style.color = "#f1c40f";
+            priceLabel.innerText = `Стоимость лицензии: $${app.price}.00`; priceLabel.style.color = "#f1c40f";
             btnSlot.innerHTML = `<button class="buy-btn" onclick="buyAppLicense('${app.id}', ${app.price})">Купить игру</button>`;
         }
 
-        // Рендерим Стим-отзывы
-        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + app.id)) || [
-            { user: "Бот-Мастер", text: "Отличный D&D баланс механик!", stars: 5 }
-        ];
-        let reviewsContainer = document.getElementById("g-detail-reviews-list");
-        reviewsContainer.innerHTML = "";
-        
+        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + app.id)) || [{ user: "Система", text: "Игра проверена.", stars: 5 }];
+        let reviewsContainer = document.getElementById("g-detail-reviews-list"); reviewsContainer.innerHTML = "";
         reviewsData.forEach(r => {
             reviewsContainer.innerHTML += `
                 <div class="review-card">
-                    <div class="review-avatar-side"><div class="review-avatar-box">🧙‍♂️</div></div>
+                    <div class="review-avatar-side"><div class="review-avatar-box">👤</div></div>
                     <div class="review-text-side">
-                        <div class="review-header"><b>${r.user}</b> <span class="review-stars">${"★".repeat(r.stars)}</span></div>
+                        <div class="review-header"><b>${r.user}</b></div>
                         <div class="review-body-text">${r.text}</div>
                     </div>
                 </div>`;
         });
     }
 
+    function publishDeveloperCustomApp() {
+        let title = document.getElementById("sdk-title").value.trim();
+        let file = document.getElementById("sdk-file").value.trim();
+        let price = parseInt(document.getElementById("sdk-price").value) || 0;
+        let desc = document.getElementById("sdk-desc").value.trim();
+        let creatorName = localStorage.getItem("tor_logged_user") || "Unknown Dev";
+
+        if (!title || !file || !desc) return alert("❌ Ошибка SDK: Заполните все поля метаданных вашей игры!");
+
+        let customApps = JSON.parse(localStorage.getItem("istok_published_apps_v3")) || [];
+        let appId = "custom_app_" + Date.now();
+
+        let newAppRecord = { id: appId, file: file, title: title, price: price, studio: creatorName, developer: creatorName, desc: desc };
+        customApps.push(newAppRecord);
+        localStorage.setItem("istok_published_apps_v3", JSON.stringify(customApps));
+        
+        alert(`🚀 SDK ИСТОК: Игра "${title}" успешно выпущена в Магазин! Студия: ${creatorName}.`);
+        document.getElementById("sdk-title").value = ""; document.getElementById("sdk-file").value = "";
+        document.getElementById("sdk-desc").value = ""; document.getElementById("sdk-price").value = "0";
+
+        refreshSteamUI(); switchSteamTab('store');
+    }
+
+    function buyAppLicense(appId, price) {
+        let buyer = localStorage.getItem("tor_logged_user");
+        if(!buyer) return alert("❌ Зарегистрируйте аккаунт Игрока во вкладке Профиль!");
+
+        let buyerGold = parseInt(localStorage.getItem("gold_balance_" + buyer)) || 0;
+        if (buyerGold < price) return alert("❌ Недостаточно средств! Выиграйте раунд в Монополии, чтобы получить +$300 монет.");
+
+        let allApps = getAllEcosystemApps();
+        let app = allApps.find(a => a.id === appId);
+
+        buyerGold -= price;
+        localStorage.setItem("gold_balance_" + buyer, buyerGold);
+
+        let authorName = app.developer;
+        if (authorName && authorName !== "system") {
+            let authorGold = parseInt(localStorage.getItem("gold_balance_" + authorName)) || 0;
+            authorGold += price;
+            localStorage.setItem("gold_balance_" + authorName, authorGold);
+        }
+
+        localStorage.setItem("istok_unlocked_" + appId, "true");
+        localStorage.setItem("hub_global_gold", buyerGold);
+        
+        alert(`🎉 Лицензия подтверждена!\nВы купили игру за $${price}.00 монет.\nСредства успешно переведены на счет Студии: ${app.studio}!`);
+        refreshSteamUI();
+    }
+
     function postLiveSteamReview() {
         let textInput = document.getElementById("review-textarea-field");
-        let starsSelect = document.getElementById("review-stars-field");
-        if(!textInput.value.trim()) return alert("Введите текст рецензии!");
+        if(!textInput.value.trim()) return alert("Введите текст обзора!");
+        let currentUser = localStorage.getItem("tor_logged_user") || "Пользователь";
 
-        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + selectedAppId)) || [
-            { user: "Бот-Мастер", text: "Отличный D&D баланс механик!", stars: 5 }
-        ];
-
-        reviewsData.push({ user: "Ирина", text: textInput.value.trim(), stars: parseInt(starsSelect.value) });
+        let reviewsData = JSON.parse(localStorage.getItem("reviews_" + selectedAppId)) || [{ user: "Система", text: "Игра проверена.", stars: 5 }];
+        reviewsData.push({ user: currentUser, text: textInput.value.trim() });
         localStorage.setItem("reviews_" + selectedAppId, JSON.stringify(reviewsData));
         textInput.value = "";
         refreshSteamUI();
     }
 
-    function buyAppLicense(appId, price) {
-        if (steamGold < price) return alert("❌ Ошибка Steam: Недостаточно средств! Выиграйте партию в Монополии, чтобы получить премиальные +$300 золота.");
-        steamGold -= price;
-        localStorage.setItem("istok_unlocked_" + appId, "true");
-        alert("🎉 Покупка завершена! Лицензионный ключ активирован. Продукт добавлен в Библиотеку!");
+    function handleHubLogin() {
+        let name = document.getElementById("reg-username-input").value.trim();
+        if (!name) return alert("Введите никнейм!");
+
+        localStorage.setItem("tor_logged_user", name);
+        localStorage.setItem("tor_logged_role", loginRoleSelection);
+        
+        if (!localStorage.getItem("gold_balance_" + name)) {
+            localStorage.setItem("gold_balance_" + name, "100");
+        }
+        
+        alert(`Вход выполнен! Вы зашли как: ${loginRoleSelection === "developer" ? "Разработчик" : "Игрок"}`);
+        refreshSteamUI(); switchSteamTab('store');
+    }
+
+    function handleHubLogout() { 
+        localStorage.removeItem("tor_logged_user"); localStorage.removeItem("tor_logged_role"); 
+        location.reload(); 
+    }
+
+    function switchSteamTab(tabKey) {
+        currentSteamTab = tabKey;
+        ['store', 'library', 'sdk', 'profile'].forEach(k => {
+            let el = document.getElementById("tab-link-" + k);
+            if(el) el.classList.remove("active-tab");
+        });
+        document.getElementById("tab-link-" + tabKey).classList.add("active-tab");
+
+        document.getElementById("active-game-detail-view").style.display = (tabKey !== "sdk" && tabKey !== "profile") ? "flex" : "none";
+        document.getElementById("active-sdk-view").style.display = tabKey === "sdk" ? "flex" : "none";
+        document.getElementById("active-profile-view").style.display = tabKey === "profile" ? "flex" : "none";
+
+        if(tabKey !== "sdk" && tabKey !== "profile") {
+            let apps = getFilteredAppList(); if (apps.length > 0) selectedAppId = apps.id;
+        }
         refreshSteamUI();
     }
 </script>

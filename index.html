@@ -201,6 +201,18 @@
             `);
             gameWindow.document.close();
         }
+        function renderProfileTab() {
+    const nameEl = document.getElementById("profile-name");
+    const levelEl = document.getElementById("profile-level");
+    const pointsEl = document.getElementById("profile-steam-points");
+
+    if (nameEl) nameEl.innerText = "IstokDev";
+    if (levelEl) levelEl.innerText = "Уровень: 5";
+    if (pointsEl) pointsEl.innerText = "Очки: 1250";
+
+    console.log("✅ Профиль обновлён (если элементы есть)");
+}
+
 
         // Загружаем игры при открытии страницы
         window.onload = loadGames;

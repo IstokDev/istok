@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИСТОК: Монополия (monopoly.html)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background: #05070a; color: #cfdee7; font-family: 'Georgia', serif; min-height: 100vh; padding: 15px; padding-bottom: 80px; display: flex; flex-direction: column; align-items: center; }
+        
+        #game-layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; width: 1150px; max-width: 100%; margin-top: 15px; }
+        .beyond-panel { background: #0b1017; border: 2px solid #16222f; border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 12px; }
+        .panel-title { font-size: 12px; font-weight: bold; color: #f39c12; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #16222f; padding-bottom: 5px; font-family: sans-serif; }
+        
+        #main-screen { background: #101924; border: 2px solid #2980b9; box-shadow: 0 0 35px rgba(41,128,185,0.3); }
+        #event-box { height: 130px; background: #04060a; border-radius: 6px; padding: 12px; overflow-y: auto; font-family: monospace; font-size: 12px; line-height: 1.5; color: #ecf0f1; border: 1px solid #16222f; white-space: pre-line; }
+        
+        /* КРУГОВАЯ КАРТА НАСТОЛЬНОЙ ИГРЫ (Сетка 5х5) */
+        #monopoly-board { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); gap: 5px; background: #16222f; border: 4px solid #f39c12; border-radius: 12px; padding: 5px; height: 410px; box-shadow: inset 0 0 30px rgba(0,0,0,0.9); }
+        .board-tile { background: #f8f9fa; color: #2c3e50; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; position: relative; overflow: hidden; font-family: sans-serif; text-align: center; transition: all 0.25s ease; border: 2px solid transparent; }
+        .center-hub { grid-column: 2 / 5; grid-row: 2 / 5; background: #0b1017; color: #f39c12; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; letter-spacing: 2px; border-radius: 8px; border: 1px solid #16222f; padding: 10px; position: relative; }
+        
+        /* Эффект свечения активной клетки под жетоном */
+        .tile-active-p1 { border-color: #3498db !important; box-shadow: 0 0 15px rgba(52,152,219,0.8) !important; background: #fff !important; }
+        .tile-active-p2 { border-color: #e74c3c !important; box-shadow: 0 0 15px rgba(231,76,60,0.8) !important; background: #fff !important; }
+
+        .tile-header { width: 100%; height: 12px; position: absolute; top: 0; left: 0; }
+        .group-brown { background: #8b5a2b; }
+        .group-blue { background: #3498db; }
+        .group-pink { background: #e84393; }
+        .group-orange { background: #e67e22; }
+        .group-red { background: #e74c3c; }
+        .group-yellow { background: #f1c40f; }
+        .group-green { background: #2ecc71; }
+        .group-purple { background: #9b59b6; }
+        
+        .token-holder { display: flex; gap: 6px; position: absolute; bottom: 4px; justify-content: center; width: 100%; }
+        .m-token { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.6); }
+        .p1-token { background: radial-gradient(circle, #3498db 0%, #1f4e79 100%); filter: drop-shadow(0 0 5px #3498db); }
+        .p2-token { background: radial-gradient(circle, #e74c3c 0%, #78281f 100%); filter: drop-shadow(0 0 5px #e74c3c); }
+        
+        .dice-shake { animation: shakeDice 0.1s infinite alternate; color: #f1c40f !important; text-shadow: 0 0 15px #f1c40f; }
+        @keyframes shakeDice { from { transform: rotate(-10deg) scale(1.1); } to { transform: rotate(10deg) scale(1.1); } }
+
+        #auction-overlay { display: none; flex-direction: column; gap: 8px; width: 100%; background: #151e2b; border: 2px dashed #f1c40f; padding: 12px; border-radius: 8px; margin-top: 5px; animation: flash 1s infinite alternate; }
+        @keyframes flash { from { border-color: #f1c40f; box-shadow: 0 0 5px rgba(241,196,15,0.2); } to { border-color: #e67e22; box-shadow: 0 0 15px rgba(230,126,34,0.4); } }
+        .auction-title { font-size: 11px; font-weight: bold; color: #f1c40f; text-align: center; text-transform: uppercase; font-family: sans-serif; }
+        .mono-btn { background: #101620; border: 1px solid #f39c12; color: #ecf0f1; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-family: sans-serif; font-size: 10px; transition: all 0.15s ease; text-align: center; }
+        .mono-btn:hover:not(:disabled) { background: #f39c12; color: #000; box-shadow: 0 0 12px rgba(243,156,18,0.6); transform: scale(1.02); }
+        .mono-btn:disabled { background: #040609; border-color: #16222f; color: #3d4b5a; cursor: not-allowed; }
+        .btn-auction-bid { background: #152e1c; border-color: #2ecc71; color: #2ecc71; }
+        .btn-auction-bid:hover:not(:disabled) { background: #2ecc71; color: #000; }
+        
+        .player-status-box { background: #101620; border: 1px solid #16222f; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 4px; font-family: sans-serif; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div id="game-layout">
+        <!-- ЛЕВАЯ ПАНЕЛЬ: БАНК -->
+        <div class="beyond-panel">
+            <div class="panel-title">💰 Баланс Участников Стола</div>
+            
+            <div class="player-status-box" style="border-left: 4px solid #3498db;" id="p1-card-ui">
+                <div style="font-weight: bold; color: #fff;" id="p1-name-label">Игрок 1 (Синий):</div>
+                <div>Наличные: <span id="p1-cash" style="color: #2ecc71; font-weight: bold;">$1500</span></div>
+                <div style="font-size: 10px; color: #bdc3c7; max-height: 40px; overflow-y: auto;">Улицы: <span id="p1-assets">Нет</span></div>
+            </div>
+
+            <div class="player-status-box" style="border-left: 4px solid #e74c3c;" id="p2-card-ui">
+                <div style="font-weight: bold; color: #fff;" id="p2-name-label">Игрок 2 / Бот (Красный):</div>
+                <div>Наличные: <span id="p2-cash" style="color: #2ecc71; font-weight: bold;">$1500</span></div>
+                <div style="font-size: 10px; color: #bdc3c7; max-height: 40px; overflow-y: auto;">Улицы: <span id="p2-assets">Нет</span></div>
+            </div>
+
+            <div class="panel-title" style="margin-top: 5px;">Действия хода</div>
+            <button id="btn-roll" class="mono-btn" onclick="startSmoothRoll()">🎲 Бросить кубики</button>
+            <button id="btn-buy" class="mono-btn" onclick="buyPropertyAction()" disabled>🏢 Купить недвижимость</button>
+            <button id="btn-auction-trigger" class="mono-btn" style="border-color: #f1c40f; color: #f1c40f;" onclick="triggerAuctionMode()" disabled>📢 Отдать на Аукцион</button>
+            <button id="btn-end" class="mono-btn" style="border-color: #2ecc71; color: #2ecc71;" onclick="endTurnAction()" disabled>🏁 Завершить ход</button>
+
+            <!-- ТОРГИ -->
+            <div id="auction-overlay">
+                <div class="auction-title">📢 Торги за: <span id="auc-tile-name" style="color:#fff;">--</span></div>
+                <div style="text-align:center; font-size:14px; font-weight:bold; color:#2ecc71; font-family:monospace;">Ставка: <span id="auc-current-price">$0</span></div>
+                <div style="text-align:center; font-size:11px; color:#bdc3c7; font-family:sans-serif;" id="auc-leader-text">Лидер: Нет ставок</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-top:4px;">
+                    <button id="btn-bid-plus" class="mono-btn btn-auction-bid" onclick="placeAuctionBid(10)">+$10</button>
+                    <button id="btn-bid-mega" class="mono-btn btn-auction-bid" onclick="placeAuctionBid(50)">+$50</button>
+                </div>
+                <button id="btn-bid-pass" class="mono-btn" style="border-color:#e74c3c; color:#e74c3c; padding:6px;" onclick="passAuctionAction()">Пас / Уступить лот</button>
+            </div>
+
+            <button class="mono-btn" style="border-color: #e74c3c; color: #e74c3c; margin-top: 10px; padding: 6px;" onclick="location.href='index.html'">🏠 Выйти в лаунчер</button>
+        </div>
+
+        <!-- ЦЕНТРАЛЬНАЯ ПАНЕЛЬ -->
+        <div class="beyond-panel" id="main-screen">
+            <div id="game-header" style="font-family: sans-serif; font-size: 13px; color: #f39c12; font-weight: bold; letter-spacing: 1px;">ТАБЛО: ХОД СИНЕГО ИГРОКА</div>
+            
+            <div id="monopoly-board">
+                <div class="center-hub">
+                    <div style="font-size:11px; color:#7f8c8d; font-family: sans-serif; letter-spacing: 1px;">КУБИКИ:</div>
+                    <div id="dice-result-visual" style="font-size: 38px; font-weight:bold; color: #fff; font-family:serif;">--</div>
+                </div>
+            </div>
+            <div id="event-box"></div>
+        </div>
+    </div>
+<script>
+    function log(txt) { 
+        let box = document.getElementById("event-box"); 
+        if(box) { box.innerText += "\n" + txt; box.scrollTop = box.scrollHeight; }
+    }
+
+    const boardTiles = [
+        { name: "СТАРТ", type: "start", price: 0, rent: 0, owner: null, group: "none" },
+        { name: "Житная ул.", type: "street", price: 60, rent: 15, owner: null, group: "brown" },
+        { name: "ШАНС 1", type: "chance", price: 0, rent: 0, owner: null, group: "none" },
+        { name: "Нагатинская", type: "street", price: 80, rent: 20, owner: null, group: "brown" },
+        { name: "ТЮРЬМА", type: "jail", price: 0, rent: 0, owner: null, group: "none" },
+        { name: "Варшавка", type: "street", price: 100, rent: 30, owner: null, group: "pink" },
+        { name: "Полянка", type: "street", price: 120, rent: 35, owner: null, group: "pink" },
+        { name: "КАЗНОЧЕЙСТВО", type: "tax", price: 0, rent: 150, owner: null, group: "none" },
+        { name: "БЕСПЛАТНАЯ СТОЯНКА", type: "parking", price: 0, rent: 0, owner: null, group: "none" },
+        { name: "Сретенка", type: "street", price: 140, rent: 45, owner: null, group: "orange" },
+        { name: "НАЛОГ", type: "tax", price: 0, rent: 100, owner: null, group: "none" },
+        { name: "Тверская", type: "street", price: 160, rent: 55, owner: null, group: "orange" },
+        { name: "ИДИ В ТЮРЬМУ", type: "go_to_jail", price: 0, rent: 0, owner: null, group: "none" },
+        { name: "Арбат", type: "street", price: 220, rent: 80, owner: null, group: "blue" },
+        { name: "ШАНС 2", type: "chance", price: 0, rent: 0, owner: null, group: "none" },
+        { name: "Малая Бронная", type: "street", price: 260, rent: 100, owner: null, group: "blue" }
+    ];
+
+    const gridLayoutMap = [
+        { r: 5, c: 5 }, { r: 5, c: 4 }, { r: 5, c: 3 }, { r: 5, c: 2 },
+        { r: 5, c: 1 }, { r: 4, c: 1 }, { r: 3, c: 1 }, { r: 2, c: 1 },
+        { r: 1, c: 1 }, { r: 1, c: 2 }, { r: 1, c: 3 }, { r: 1, c: 4 },
+        { r: 1, c: 5 }, { r: 2, c: 5 }, { r: 3, c: 5 }, { r: 4, c: 5 }
+    ];
+
+    let players = [
+        { id: 1, name: "Игрок 1", cash: 1500, pos: 0, assets: [], inJail: false },
+        { id: 2, name: "Игрок 2", cash: 1500, pos: 0, assets: [], inJail: false }
+    ];
+    
+    let activePlayerIdx = 0, isMultiplayer = false;
+    let isRollingAnimation = false;
+
+    let isAuctionActive = false;
+    let auctionTileIdx = -1;
+    let auctionCurrentPrice = 0;
+    let auctionHighestBidderIdx = -1;
+    let auctionActiveBidderIdx = 0;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        isMultiplayer = confirm("🎮 МОНОПОЛИЯ НА ПЛАТФОРМЕ ИСТОК\n\nНажмите ОК, чтобы играть ВДВОЕМ.\nНажмите ОТМЕНА, чтобы играть против ИИ-Бота.");
+        
+        let p1Name = localStorage.getItem("tor_logged_user") || "Игрок 1";
+        players[0].name = p1Name;
+        players[1].name = isMultiplayer ? "Игрок 2" : "Бот-Мастер";
+
+        document.getElementById("p1-name-label").innerText = players[0].name + " (Синий):";
+        document.getElementById("p2-name-label").innerText = players[1].name + " (Красный):";
+
+        buildMonopolyBoardHTML();
+        log("🎲 Банкир: Монополия подключена к общему золотому кошельку хаба ИСТОК!");
+        updateMoneyUI();
+    });
+
+    function buildMonopolyBoardHTML() {
+        let board = document.getElementById("monopoly-board");
+        let oldTiles = board.querySelectorAll(".board-tile");
+        oldTiles.forEach(t => t.remove());
+
+        boardTiles.forEach((tile, idx) => {
+            let coords = gridLayoutMap[idx];
+            let cell = document.createElement("div");
+            cell.className = "board-tile";
+            cell.style.gridRow = coords.r;
+            cell.style.gridColumn = coords.c;
+
+            if (!isRollingAnimation && players[activePlayerIdx].pos === idx) {
+                cell.classList.add(activePlayerIdx === 0 ? "tile-active-p1" : "tile-active-p2");
+            }
+
+            if (tile.type === "street") {
+                let header = document.createElement("div");
+                header.className = "tile-header group-" + tile.group;
+                cell.appendChild(header);
+                
+                let ownerText = tile.owner ? (tile.owner === 1 ? "• СИНИЙ" : "• КРАСНЫЙ") : `$${tile.price}`;
+                cell.innerHTML += `<div style="font-size:10px; font-weight:bold; margin-top:8px;">${tile.name}</div><div style="font-size:9px; font-weight:bold; color:#27ae60;">${ownerText}</div>`;
+            } else {
+                cell.innerHTML = `<div style="font-size:9px; font-weight:bold; color:#566573; height:100%; display:flex; align-items:center;">${tile.name}</div>`;
+            }
+
+            let holder = document.createElement("div");
+            holder.className = "token-holder";
+            if (players[0].pos === idx) holder.innerHTML += `<div class="m-token p1-token"></div>`;
+            if (players[1].pos === idx) holder.innerHTML += `<div class="m-token p2-token"></div>`;
+            
+            cell.appendChild(holder);
+            board.appendChild(cell);
+        });
+    }
+
+    function startSmoothRoll() {
+        if(isRollingAnimation || isAuctionActive) return;
+        isRollingAnimation = true;
+        resetActionButtons();
+
+        let p = players[activePlayerIdx];
+        let d1 = Math.floor(Math.random() * 6) + 1;
+        let d2 = Math.floor(Math.random() * 6) + 1;
+        let rollSum = d1 + d2;
+
+        let diceLabel = document.getElementById("dice-result-visual");
+        diceLabel.classList.add("dice-shake");
+
+        let shakeCounter = 0;
+        let shakeInterval = setInterval(() => {
+            diceLabel.innerText = (Math.floor(Math.random()*6)+1) + " • " + (Math.floor(Math.random()*6)+1);
+            shakeCounter++;
+            if (shakeCounter >= 6) {
+                clearInterval(shakeInterval);
+                diceLabel.classList.remove("dice-shake");
+                diceLabel.innerText = d1 + " • " + d2;
+                
+                log(`\n🎲 ${p.name} выбрасывает: [${d1} : ${d2}]`);
+                executeSteps(rollSum);
+            }
+        }, 80);
+
+        function executeSteps(totalSteps) {
+            let stepsLeft = totalSteps;
+            function doSingleStep() {
+                if (stepsLeft > 0) {
+                    let oldPos = p.pos;
+                    p.pos = (p.pos + 1) % 16;
+                    stepsLeft--;
+
+                    if (p.pos === 0 && oldPos === 15) {
+                        p.cash += 200;
+                        log(`💵 Банк: ${p.name} пересекает СТАРТ! Начислено +$200.`);
+                    }
+
+                    buildMonopolyBoardHTML();
+                    setTimeout(doSingleStep, 150);
+                } else {
+                    isRollingAnimation = false;
+                    buildMonopolyBoardHTML();
+                    evaluateLandedTile();
+                }
+            }
+            doSingleStep();
+        }
+    }
+</script>
+<script>
+    function evaluateLandedTile() {
+        let p = players[activePlayerIdx];
+        let tile = boardTiles[p.pos];
+        log(`📍 Фишка остановилась на поле: ${tile.name}`);
+
+        document.getElementById("btn-end").disabled = false;
+
+        if (tile.type === "street") {
+            if (tile.owner === null) {
+                if (p.cash >= tile.price) document.getElementById("btn-buy").disabled = false;
+                document.getElementById("btn-auction-trigger").disabled = false;
+
+                if (activePlayerIdx === 1 && !isMultiplayer) {
+                    if (p.cash >= tile.price) setTimeout(buyPropertyAction, 1000);
+                    else setTimeout(triggerAuctionMode, 1000);
+                }
+            } else if (tile.owner === p.id) {
+                log(`🏢 Собственная точка. Налоги платить не нужно.`);
+                if (activePlayerIdx === 1 && !isMultiplayer) setTimeout(endTurnAction, 1000);
+            } else {
+                let owner = players.find(pl => pl.id === tile.owner);
+                p.cash -= tile.rent; owner.cash += tile.rent;
+                log(`💸 Штраф: Вы выплатили аренду $${tile.rent} игроку ${owner.name}${owner.inJail ? ' (в Тюрьме ⚖️)' : ''}.`);
+                if (activePlayerIdx === 1 && !isMultiplayer) setTimeout(endTurnAction, 1000);
+            }
+        } else {
+            if (tile.type === "tax") { p.cash -= tile.rent; log(`💸 Пошлина: Из кошелька списано $${tile.rent}.`); }
+            if (tile.type === "go_to_jail") {
+                p.pos = 4; p.inJail = true;
+                log(`🚨 ТЮРЬМА: Наложен арест! Прибыль сохраняется, можно торговаться на аукционах.`);
+                buildMonopolyBoardHTML();
+            }
+            if (activePlayerIdx === 1 && !isMultiplayer) setTimeout(endTurnAction, 1000);
+        }
+        updateMoneyUI();
+    }
+
+    function buyPropertyAction() {
+        let p = players[activePlayerIdx]; let tile = boardTiles[p.pos];
+        if (tile.type === "street" && tile.owner === null && p.cash >= tile.price) {
+            p.cash -= tile.price; tile.owner = p.id; p.assets.push(tile.name);
+            log(`🏢 Сделка: ${p.name} покупает ${tile.name} за $${tile.price}.`);
+            document.getElementById("btn-buy").disabled = true;
+            document.getElementById("btn-auction-trigger").disabled = true;
+            updateMoneyUI(); buildMonopolyBoardHTML();
+            if (activePlayerIdx === 1 && !isMultiplayer) setTimeout(endTurnAction, 1000);
+        }
+    }
+
+    function triggerAuctionMode() {
+        resetActionButtons(); isAuctionActive = true;
+        auctionTileIdx = players[activePlayerIdx].pos; let tile = boardTiles[auctionTileIdx];
+        auctionCurrentPrice = Math.floor(tile.price / 2); auctionHighestBidderIdx = -1; auctionActiveBidderIdx = 0;
+
+        document.getElementById("auc-tile-name").innerText = tile.name;
+        document.getElementById("auc-current-price").innerText = `$${auctionCurrentPrice}`;
+        document.getElementById("auc-leader-text").innerText = "Лидер: Нет ставок";
+        document.getElementById("auction-overlay").style.display = "flex";
+        log(`📢 АУКЦИОН: Борьба за [${tile.name}]! Старт с $${auctionCurrentPrice}. Очередь Игрока 1.`);
+        updateAuctionButtonsState();
+    }
+
+    function placeAuctionBid(amount) {
+        if(!isAuctionActive) return;
+        let bidder = players[auctionActiveBidderIdx]; let nextPrice = auctionCurrentPrice + amount;
+        if (bidder.cash < nextPrice) return alert("❌ Ошибка: В кошельке нет такой суммы!");
+
+        auctionCurrentPrice = nextPrice; auctionHighestBidderIdx = auctionActiveBidderIdx;
+        document.getElementById("auc-current-price").innerText = `$${auctionCurrentPrice}`;
+        document.getElementById("auc-leader-text").innerText = `Лидер: ${bidder.name} ($${auctionCurrentPrice})`;
+        log(`⚡ Ставка: ${bidder.name} поднимает цену до $${auctionCurrentPrice}.`);
+        switchAuctionBidder();
+    }
+
+    function passAuctionAction() {
+        log(`🏳️ Уступка: ${players[auctionActiveBidderIdx].name} пасует.`);
+        if (auctionHighestBidderIdx === -1) { log("📢 Лот сгорел."); closeAuctionOverlay(); return; }
+
+        let winner = players[auctionHighestBidderIdx]; let tile = boardTiles[auctionTileIdx];
+        winner.cash -= auctionCurrentPrice; tile.owner = winner.id; winner.assets.push(tile.name);
+        log(`🏆 АУКЦИОН ЗАКРЫТ! [${tile.name}] получает ${winner.name} за $${auctionCurrentPrice}!`);
+        closeAuctionOverlay(); buildMonopolyBoardHTML(); updateMoneyUI();
+    }
+
+    function switchAuctionBidder() {
+        auctionActiveBidderIdx = auctionActiveBidderIdx === 0 ? 1 : 0;
+        if (auctionActiveBidderIdx === 1 && !isMultiplayer) {
+            setTimeout(() => {
+                let bot = players[1]; let tile = boardTiles[auctionTileIdx];
+                if (bot.cash > auctionCurrentPrice + 50 && auctionCurrentPrice < tile.price * 1.1) {
+                    placeAuctionBid(Math.random() > 0.5 ? 50 : 10);
+                } else { passAuctionAction(); }
+            }, 700);
+        } else { updateAuctionButtonsState(); }
+    }
+
+    function updateAuctionButtonsState() {
+        document.getElementById("game-header").innerText = `📢 АУКЦИОН: ОЧЕРЕДЬ ГЕРОЯ ${players[auctionActiveBidderIdx].name.toUpperCase()}`;
+    }
+
+    function closeAuctionOverlay() {
+        isAuctionActive = false; document.getElementById("auction-overlay").style.display = "none";
+        document.getElementById("btn-end").disabled = false;
+        if(activePlayerIdx === 1 && !isMultiplayer) setTimeout(endTurnAction, 1000);
+    }
+
+    function endTurnAction() {
+        resetActionButtons();
+        activePlayerIdx = activePlayerIdx === 0 ? 1 : 0;
+        let nextP = players[activePlayerIdx];
+        document.getElementById("game-header").innerText = `ТАБЛО: ХОД ${nextP.name.toUpperCase()}`;
+        log(`\n🔔 Очередь переходит к: ${nextP.name}`);
+
+        if (activePlayerIdx === 0) { document.getElementById("btn-roll").disabled = false; } 
+        else {
+            if (!isMultiplayer) setTimeout(startSmoothRoll, 1000);
+            else document.getElementById("btn-roll").disabled = false;
+        }
+    }
+
+    function resetActionButtons() {
+        document.getElementById("btn-roll").disabled = true; document.getElementById("btn-buy").disabled = true;
+        document.getElementById("btn-auction-trigger").disabled = true; document.getElementById("btn-end").disabled = true;
+    }
+
+    function updateMoneyUI() {
+        document.getElementById("p1-cash").innerText = `$${players[0].cash}`;
+        document.getElementById("p2-cash").innerText = `$${players[1].cash}`;
+        document.getElementById("p1-assets").innerText = players[0].assets.join(", ") || "Нет";
+        document.getElementById("p2-assets").innerText = players[1].assets.join(", ") || "Нет";
+
+        document.getElementById("p1-card-ui").style.background = activePlayerIdx === 0 ? "#182535" : "#101620";
+        document.getElementById("p2-card-ui").style.background = activePlayerIdx === 1 ? "#351a1e" : "#101620";
+
+        // КОНВЕРТАЦИЯ ПРИБЫЛИ
+        if (players[0].cash <= 0 || players[1].cash <= 0) {
+            let loserIdx = players[0].cash <= 0 ? 0 : 1;
+            let winnerIdx = loserIdx === 0 ? 1 : 0;
+            
+            if (winnerIdx === 0) {
+                let currentHubGold = parseInt(localStorage.getItem("hub_global_gold")) || 50;
+                currentHubGold += 300; 
+                localStorage.setItem("hub_global_gold", currentHubGold.toString());
+                alert(`🏆 ГРАНДИОЗНАЯ ПОБЕДА!\n\n${players[loserIdx].name} полностью обанкротился!\n\n🪙 В общий кошелек ИСТОКА зачислено: +$300 золота!`);
+            } else {
+                alert(`💥 БАНКРОТСТВО!\nВы потеряли весь капитал. Бот-Мастер победил.`);
+            }
+            location.href = "index.html";
+        }
+    }
+</script>
+</body>
+</html>

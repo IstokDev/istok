@@ -1,0 +1,10 @@
+[
+  {
+    "id": "monopoly",
+    "title": "Монополия Online",
+    "price": 10,
+    "genre": "стратегия",
+    "url": "https://istok-games.github.io/games/monopoly/game.html",
+    "manifest": "https://istok-games.github.io/games/monopoly/manifest.json"
+  }
+]

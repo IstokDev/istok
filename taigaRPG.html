@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- ПОДКЛЮЧАЕМ МАНИФЕСТ ДЛЯ ПОЛНОЭКРАННОГО РЕЖИМА ПРИЛОЖЕНИЯ -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#041207" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>ТАЙГА-RPG</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+        body { margin: 0; padding: 0; background: #041207; color: #e3ffe6; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none; width: 100vw; height: 100vh; }
+        #main-menu { 
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: linear-gradient(135deg, #112a14, #051408); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; 
+        }
+        .menu-title { font-size: 54px; font-weight: 900; letter-spacing: 4px; color: #39ff14; text-shadow: 0 0 25px rgba(57,255,20,0.6); margin-bottom: 20px; text-align: center; }
+
+        .menu-form { 
+            background: rgba(10, 28, 14, 0.9); padding: 30px; border: 2px solid #39ff14; border-radius: 16px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); width: 340px; display: flex; flex-direction: column; gap: 15px; 
+            backdrop-filter: blur(10px);
+        }
+        .menu-input { 
+            background: rgba(0,0,0,0.5); border: 1px solid #1b4d22; padding: 14px; 
+            color: #39ff14; font-family: inherit; font-size: 16px; outline: none; border-radius: 8px; text-align: center; transition: 0.3s;
+        }
+        .menu-input:focus { border-color: #39ff14; box-shadow: 0 0 10px rgba(57,255,20,0.3); }
+        .menu-btn { 
+            background: #1b4d22; border: 2px solid #39ff14; padding: 14px; 
+            color: #39ff14; font-family: inherit; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 8px; text-align: center; box-shadow: inset 0 0 10px rgba(57,255,20,0.2); transition: 0.2s;
+        }
+        .menu-btn:hover { background: #39ff14; color: #020a04; box-shadow: 0 0 20px #39ff14; }
+        #menu-leaderboard { width: 100%; background: rgba(0, 0, 0, 0.6); padding: 14px; border-radius: 10px; border: 1px dashed rgba(57, 255, 20, 0.4); display: flex; flex-direction: column; gap: 4px; }
+        #game-container { position: absolute; width: 100vw; height: 100vh; top: 0; left: 0; overflow: hidden; display: none; }
+        #world { position: absolute; width: 4000px; height: 4000px; background: linear-gradient(45deg, #14351b, #0d2613); background-image: radial-gradient(rgba(57, 255, 20, 0.05) 15%, transparent 16%); background-size: 80px 80px; transform-origin: 0 0; }
+        #night-overlay { position: absolute; width: 100vw; height: 100vh; top: 0; left: 0; pointer-events: none; z-index: 8; background: rgba(0, 0, 25, 0); transition: background 2s ease; }
+        .tree { position: absolute; width: 50px; height: 50px; border-radius: 50%; transform: translate(-25px, -25px); z-index: 2; text-align: center; line-height: 46px; font-size: 20px; box-shadow: 0 8px 15px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); }
+        .tree-spruce { background: linear-gradient(#153d1b, #071f0b); border-color: #1b4d22; }
+        .tree-oak { background: linear-gradient(#4a3319, #241405); border-color: #5c3a21; }
+        .tree-birch { background: linear-gradient(#5a665e, #2c332d); border-color: #ffffff; }
+        .tree-maple { background: linear-gradient(#571111, #240505); border-color: #8c1c1c; }
+        .lake-zone { position: absolute; left: 1400px; top: 1500px; width: 1000px; height: 700px; background: radial-gradient(circle, rgba(0, 130, 255, 0.4), rgba(0, 60, 180, 0.5)); border-radius: 40%; border: 4px dashed #39aaff; box-shadow: inset 0 0 80px rgba(0,0,0,0.6); z-index: 1; }
+        .lake-title { position: absolute; width: 100%; text-align: center; top: 46%; color: #39aaff; font-weight: bold; font-size: 24px; pointer-events: none; text-shadow: 0 0 12px #000; letter-spacing: 2px; }
+        .house { position: absolute; width: 130px; height: 110px; border-radius: 12px; transform: translate(-65px, -55px); z-index: 1; box-shadow: 0 15px 30px rgba(0,0,0,0.6); border: 3px solid rgba(255,255,255,0.15); }
+        .house-lesnik { background: linear-gradient(#735141, #3d251a); border-color: #ffea00; }
+        .house-lesnik::after { content: "🏠 Изба Лесника"; position: absolute; top: -24px; width: 100%; text-align: center; color: #ffea00; font-size: 12px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+        .house-kupec { background: linear-gradient(#8c5849, #4a2b1f); border-color: #ffaa00; }
+        .house-kupec::after { content: "🏪 Лавка Купца"; position: absolute; top: -24px; width: 100%; text-align: center; color: #ffaa00; font-size: 12px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+        .house-military { background: linear-gradient(#395232, #1c2b18); border-color: #4d6e3b; }
+        .house-military::after { content: "🪖 Блокпост"; position: absolute; top: -24px; width: 100%; text-align: center; color: #4d6e3b; font-size: 12px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+        .house-znahar { background: linear-gradient(#2b595c, #11282b); border-color: #00ffff; }
+        .house-znahar::after { content: "🧪 Хижина Знахаря"; position: absolute; top: -24px; width: 100%; text-align: center; color: #00ffff; font-size: 12px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+        .house-elder { background: linear-gradient(#603b61, #301730); border-color: #df00ff; }
+        .house-elder::after { content: "🛖 Дом Старейшины"; position: absolute; top: -24px; width: 100%; text-align: center; color: #df00ff; font-size: 12px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+        .wall-crafted { position: absolute; width: 34px; height: 34px; background: linear-gradient(#5c4228, #301f0e); border: 2px solid #8b5a2b; border-radius: 6px; transform: translate(-17px, -17px); z-index: 3; box-shadow: 0 5px 10px rgba(0,0,0,0.5); text-align: center; line-height: 30px; font-size: 14px; }
+        .campfire { position: absolute; width: 40px; height: 40px; background: radial-gradient(circle, #ff6a00, #ff2200); border-radius: 50%; transform: translate(-20px, -20px); z-index: 3; box-shadow: 0 0 40px #ff6a00; text-align: center; line-height: 40px; font-size: 18px; animation: pulse 0.8s infinite alternate; }
+        .torch-crafted { position: absolute; width: 18px; height: 18px; background: #ffaa00; border-radius: 50%; transform: translate(-9px, -9px); z-index: 3; box-shadow: 0 0 25px #ff5500; text-align: center; line-height: 18px; font-size: 12px; animation: pulse 0.6s infinite alternate; }
+        .bullet { position: absolute; width: 8px; height: 8px; background: #fff; box-shadow: 0 0 12px #fff; border-radius: 50%; z-index: 7; transform: translate(-4px, -4px); }
+        .player { position: absolute; width: 32px; height: 32px; border-radius: 50%; transform: translate(-16px, -16px); font-size: 16px; font-weight: bold; text-align: center; line-height: 28px; z-index: 5; box-shadow: 0 8px 20px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.2); }
+        @keyframes pulse { from { transform: translate(-20px, -20px) scale(0.9); } to { transform: translate(-20px, -20px) scale(1.1); } }
+        .player-label { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: bold; white-space: nowrap; background: rgba(5,19,8,0.85); border: 1px solid rgba(57,255,20,0.3); padding: 2px 6px; border-radius: 6px; color: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .me { background: radial-gradient(circle, #268aff, #0044cc); color: #fff; border-color: #8cd6ff; box-shadow: 0 0 20px rgba(0,119,255,0.6); z-index: 6; }
+        .other { background: radial-gradient(circle, #ff8c00, #b34a00); color: #fff; border-color: #ffca80; box-shadow: 0 0 15px rgba(212,93,0,0.5); }
+        .npc { background: radial-gradient(circle, #a64dff, #5900b3); color: #fff; border-color: #dfb3ff; box-shadow: 0 0 15px rgba(139,0,255,0.5); }
+        .monster { background: radial-gradient(circle, #ff4d4d, #b30000); color: #fff; border-color: #ffb3b3; box-shadow: 0 0 20px rgba(255,57,57,0.6); font-size: 14px; }
+        .action-container { position: absolute; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 15px; z-index: 30; }
+        .m-hud-btn { width: 80px; height: 80px; border-radius: 50%; color: #fff; font-family: inherit; font-size: 13px; font-weight: bold; text-align: center; cursor: pointer; border: 3px solid rgba(255,255,255,0.4); box-shadow: 0 8px 25px rgba(0,0,0,0.6); transition: 0.1s; backdrop-filter: blur(5px); }
+        #m-action-btn { background: linear-gradient(135deg, rgba(57, 25, 20, 0.4), rgba(12, 82, 4, 0.6)); border-color: #39ff14; }
+        #m-inv-btn { background: linear-gradient(135deg, rgba(255, 170, 0, 0.4), rgba(133, 80, 0, 0.6)); border-color: #ffaa00; line-height: 74px; }
+        #ui-hud { position: absolute; bottom: 25px; left: 25px; background: rgba(5, 19, 8, 0.85); border: 1px solid rgba(57, 25, 20, 0.4); border-radius: 12px; padding: 16px; width: 330px; z-index: 10; backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .stats-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; align-items: center; }
+        .lvl-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; margin: 4px 0 8px 0; overflow: hidden; }
+        .lvl-fill { height: 100%; background: #39ff14; width: 0%; transition: width 0.2s; }
+        .water-bar { width: 80px; height: 8px; background: rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden; display: inline-block; }
+        .water-fill { height: 100%; background: #39aaff; width: 100%; }
+        #time-display { position: absolute; top: 25px; right: 25px; background: rgba(5, 19, 8, 0.8); padding: 10px 20px; border: 1px solid rgba(57,255,20,0.3); font-size: 14px; z-index: 10; border-radius: 20px; backdrop-filter: blur(5px); font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        #chat-box { position: absolute; top: 25px; left: 25px; width: 330px; height: 140px; background: rgba(5,19,8,0.6); border-radius: 8px; z-index: 10; display: flex; flex-direction: column; padding: 8px; backdrop-filter: blur(4px); }
+        #chat-messages { flex: 1; overflow-y: auto; font-size: 12px; color: #a3ffb4; font-weight: 500; }
+        #chat-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(57,255,20,0.4); color: #39ff14; padding: 6px; font-family: inherit; outline: none; border-radius: 4px; margin-top: 4px; display: none; }
+        #inventory-window { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 430px; background: rgba(5, 19, 8, 0.95); border: 2px solid #ffaa00; border-radius: 14px; z-index: 60; flex-direction: column; padding: 18px; box-shadow: 0 15px 50px rgba(0,0,0,0.7); backdrop-filter: blur(10px); }
+        .inv-tabs { display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid rgba(255,170,0,0.3); padding-bottom: 8px; }
+        .tab-btn { background: rgba(0,0,0,0.3); border: 1px solid #ffaa00; color: #ffaa00; padding: 8px; font-family: inherit; font-size: 12px; cursor: pointer; flex: 1; text-align: center; border-radius: 6px; transition: 0.2s; }
+        .tab-btn.active { background: #ffaa00; color: #020a04; font-weight: bold; box-shadow: 0 0 10px rgba(255,170,0,0.4); }
+        .tab-content { flex: 1; overflow-y: auto; display: none; font-size: 13px; color: #fff; }
+        .tab-content.active { display: block; }
+        .inv-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(255,170,0,0.15); }
+        #modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 50; justify-content: center; align-items: center; }
+        .modal-window { position: relative; background: rgba(5, 19, 8, 0.96); border: 2px solid #39ff14; padding: 22px; width: 340px; border-radius: 14px; box-shadow: 0 20px 60px rgba(57,255,20,0.2); backdrop-filter: blur(10px); }
+        .modal-close-btn { position: absolute; top: 14px; right: 16px; color: #ff3939; font-size: 22px; font-weight: bold; cursor: pointer; text-shadow: 0 0 8px #ff0000; transition: transform 0.1s; }
+        .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; border-bottom: 1px solid rgba(57,255,20,0.3); padding-bottom: 6px; padding-right: 30px; color: #39ff14; }
+        .modal-text { font-size: 13px; margin-bottom: 18px; color: #c4ebd0; line-height: 1.4; }
+        .game-btn { background: rgba(0,0,0,0.3); border: 1px solid #39ff14; color: #39ff14; padding: 8px 12px; font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 6px; text-align: left; width: 100%; margin-bottom: 8px; transition: 0.2s; }
+        .game-btn:hover { background: #39ff14; color: #020a04; }
+    </style>
+</head>
+<body>
+    <div id="main-menu">
+        <div class="menu-title">ТАЙГА-RPG</div>
+        <div class="menu-form">
+            <input type="text" id="nickname-input" class="menu-input" placeholder="Имя Выжившего" maxlength="12" value="Охотник" />
+            <button id="start-btn" class="menu-btn" onclick="startGameEngine()">ИГРАТЬ</button>
+            <div id="menu-leaderboard">
+                <div style="color:#ffaa00; font-weight:bold; font-size:13px; margin-bottom:4px; text-align:center;">🏆 ТОП БОГАЧЕЙ ТАЙГИ</div>
+                <div style="color:#888; font-size:11px; text-align:center;">Загрузка списка выживших...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="chat-box">
+            <div id="chat-messages"></div>
+            <input type="text" id="chat-input" placeholder="Нажмите Enter для отправки..." />
+        </div>
+        <div id="time-display">Время: 12:00</div>
+        
+        <div id="world-viewport" style="position: absolute; width: 100vw; height: 100vh; left: 0; top: 0;">
+            <div id="world">
+                <div class="lake-zone">
+                    <div class="lake-title">🌊 СИБИРСКОЕ ОЗЕРО</div>
+                </div>
+            </div>
+        </div>
+        <div id="night-overlay"></div>
+        <div class="action-container" id="mobile-buttons">
+            <button id="m-action-btn" class="m-hud-btn">🕹️<br><span id="action-btn-text">ДЕЙСТВИЕ</span></button>
+            <button id="m-inv-btn" class="m-hud-btn" onclick="toggleInventoryWindow()">🎒 РЮКЗАК</button>
+        </div>
+        
+        <div id="ui-hud">
+            <div class="stats-row"><span id="ui-name">Выживший</span><span id="ui-lvl" style="color:#ffea00;">Ур. 1</span></div>
+            <div class="lvl-bar"><div id="ui-lvl-fill" class="lvl-fill"></div></div>
+            <div class="stats-row"><span>❤️ Здоровье:</span><span id="ui-hp">100/100</span></div>
+            <div class="stats-row"><span>💧 Жажда:</span><div><div class="water-bar"><div id="ui-water-fill" class="water-fill"></div></div> <span id="ui-water-text">100%</span></div></div>
+            <div class="stats-row"><span>💰 Кошелек:</span><span id="ui-money" style="color:#ffaa00;">500 руб.</span></div>
+            <div class="stats-row"><span>⚔️ Сила атаки:</span><span id="ui-dmg-text">15</span></div>
+            <div class="stats-row"><span style="color:#ffaa00;">📜 Задание:</span><span id="ui-quest" style="color:#fff; font-size:11px;">Нет</span></div>
+            <button class="game-btn" style="margin-top:10px; background:#220000; border-color:#ff3939; color:#ff3939; text-align:center; font-weight:bold;" onclick="returnToMainMenu()">Exit 🚪 В МЕНЮ</button>
+        </div>
+    </div>
+
+    <div id="inventory-window">
+        <div class="inv-tabs">
+            <button class="tab-btn active" onclick="switchInvTab('tab-eq', event)">🎒 Снаряжение</button>
+            <button class="tab-btn" onclick="switchInvTab('tab-craft', event)">⚒️ Крафт</button>
+            <button class="tab-btn" onclick="switchInvTab('tab-quests', event)">📜 Задания</button>
+        </div>
+        <div id="tab-eq" class="tab-content active"></div>
+        <div id="tab-craft" class="tab-content">
+            <div style="margin-bottom:10px; font-size:11px; color:#888;">Создание построек:</div>
+            <button class="game-btn" onclick="craftItemInInv('torch')">🏮 Скрафтить Факел (3 дров)</button>
+            <button class="game-btn" onclick="craftItemInInv('campfire')">🔥 Разжечь Костер (10 дров)</button>
+            <button class="game-btn" onclick="craftItemInInv('wall')">🧱 Поставить Стену (15 дров)</button>
+        </div>
+        <div id="tab-quests" class="tab-content"></div>
+        <button class="game-btn" style="background:#220000; border-color:#ffaa00; text-align:center; margin-top:auto; color:#ffaa00;" onclick="toggleInventoryWindow()">Закрыть рюкзак</button>
+    </div>
+
+    <div id="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-close-btn" onclick="closeModal()">❌</div>
+            <div id="modal-title" class="modal-title">НПС</div>
+            <div id="modal-text" class="modal-text">Диалог...</div>
+            <div id="modal-choices"></div>
+        </div>
+    </div>
+        <script>
+        // Исходное чистое состояние выжившего
+        const player = { id: null, name: "Выживший", x: 2000, y: 2000, targetX: 2000, targetY: 2000, isMoving: false, hp: 100, maxHp: 100, water: 100, hunger: 100, lvl: 1, exp: 0, nextLvlExp: 100, money: 500, dmg: 15 };
+        
+        // Базовый стартовый набор предметов выживания
+        const inventory = { wood: 25, maple_wood: 0, torches: 0, fish_crucian: 3, fish_pike: 0, fish_perch: 0, berries: 12, raw_meat: 4, cooked_meat: 0, cooked_fish: 0, kazan: 1, taiga_soup: 0, fish_soup: 0 };
+        
+        let ws = null;
+        let isOnlineMode = false;
+        
+        const otherPlayers = {};
+        const serverMonsters = {};
+        const serverCrafts = {};
+        const offlineMonsters = [];
+
+        const weapons = { hasAxe: true, hasKnife: false };
+        let znaharQuestActive = false;
+        let currentQuestStage = "stage1"; 
+        const speed = 5;
+        const worldSize = 4000;
+        let gameTime = 720;
+        let isNight = false;
+
+        let isFishing = false;
+        let fishingTimer = 0;
+        let fishIsBiting = false;
+
+        const entities = { trees: [], houses: [], npcs: [], bullets: [], crafts: [], berry_bushes: [] };
+
+        const treeVarieties = [
+            { class: "tree-spruce", icon: "🌲", name: "Ель", hp: 3, reward: 2 },
+            { class: "tree-oak", icon: "🌳", name: "Дуб", hp: 6, reward: 5 },
+            { class: "tree-birch", icon: "🌿", name: "Береза", hp: 2, reward: 1 },
+            { class: "tree-maple", icon: "🍁", name: "Клен", hp: 4, reward: 3 }
+        ];
+
+        const mainMenu = document.getElementById('main-menu');
+        const gameContainer = document.getElementById('game-container');
+        const world = document.getElementById('world');
+        const nightOverlay = document.getElementById('night-overlay');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const modalOverlay = document.getElementById('modal-overlay');
+        function startGameEngine() {
+            if (typeof menuAnimFrame !== 'undefined') cancelAnimationFrame(menuAnimFrame);
+            const nick = document.getElementById('nickname-input').value.trim();
+            if(nick) player.name = nick;
+            mainMenu.style.display = 'none';
+            gameContainer.style.display = 'block';
+            
+            let uiHud = document.getElementById('ui-hud');
+            if(uiHud && !document.getElementById('ui-hunger-row')) {
+                let hungerRow = document.createElement('div');
+                hungerRow.className = 'stats-row';
+                hungerRow.id = 'ui-hunger-row';
+                hungerRow.innerHTML = `<span>🍖 Голод:</span><div><div class="water-bar"><div id="ui-hunger-fill" class="water-fill" style="background:#ffaa00; width:100%;"></div></div> <span id="ui-hunger-text">100%</span></div>`;
+                uiHud.appendChild(hungerRow);
+            }
+
+            if('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                document.getElementById('mobile-buttons').style.display = "flex";
+            }
+            
+            initWorld();
+            loadPlayerData();
+            connectToServer(); 
+            initControlListeners(); 
+            gameLoop();
+            renderInventory();
+            updateQuestUi();
+        }
+
+        function returnToMainMenu() {
+            savePlayerData();
+            if(ws) { ws.close(); ws = null; }
+            isOnlineMode = false; player.isMoving = false;
+            
+            for (let id in otherPlayers) { otherPlayers[id].el.remove(); delete otherPlayers[id]; }
+            for (let id in serverMonsters) { serverMonsters[id].el.remove(); delete serverMonsters[id]; }
+            offlineMonsters.forEach(m => m.element.remove()); offlineMonsters.length = 0;
+            
+            const oldMe = document.getElementById('player-me'); if(oldMe) oldMe.remove();
+            entities.trees.forEach(t => t.element.remove()); entities.trees = [];
+            if(entities.berry_bushes) { entities.berry_bushes.forEach(b => b.element.remove()); entities.berry_bushes = []; }
+            
+            entities.npcs.forEach(n => { const el = document.querySelector(`.player.npc`); if(el) el.remove(); });
+            const houses = document.querySelectorAll('.house'); houses.forEach(h => h.remove()); entities.npcs = [];
+            
+            gameContainer.style.display = 'none'; mainMenu.style.display = 'flex';
+        }
+        function initWorld() {
+            entities.berry_bushes = [];
+            entities.trees = [];
+
+            const locations = [
+                { id: 'lesnik', title: 'Изба Лесника', x: 400, y: 400, type: 'house-lesnik', npc: { name: 'Лесник Егор', icon: '🧔', type: 'lesnik' }},
+                { id: 'kupec', title: 'Лавка Купца', x: 3400, y: 600, type: 'house-kupec', npc: { name: 'Купец Еремей', icon: '👨‍💼', type: 'kupec' }},
+                { id: 'military', title: 'Блокпост', x: 800, y: 3300, type: 'house-military', npc: { name: 'Капитан Блинов', icon: '🪖', type: 'military' }},
+                { id: 'znahar', title: 'Хижина Знахаря', x: 3200, y: 3200, type: 'house-znahar', npc: { name: 'Дед Пахом', icon: '🧙‍♂️', type: 'znahar' }},
+                { id: 'elder', title: 'Дом Старейшины', x: 2000, y: 600, type: 'house-elder', npc: { name: 'Старейшина Наум', icon: '👴', type: 'elder' }}
+            ];
+
+            locations.forEach(loc => {
+                const hEl = document.createElement('div'); hEl.className = `house ${loc.type}`; hEl.style.left = `${loc.x}px`; hEl.style.top = `${loc.y}px`; world.appendChild(hEl);
+                const npcEl = document.createElement('div'); npcEl.className = `player npc`; npcEl.style.left = `${loc.x}px`; npcEl.style.top = `${loc.y + 70}px`; npcEl.innerHTML = `${loc.npc.icon}<div class="player-label">${loc.npc.name}</div>`; world.appendChild(npcEl);
+                entities.npcs.push({ x: loc.x, y: loc.y + 70, type: loc.npc.type });
+            });
+
+            for (let i = 0; i < 180; i++) {
+                let tx = Math.random() * (worldSize - 300) + 150; let ty = Math.random() * (worldSize - 300) + 150;
+                if(tx > 1350 && tx < 2450 && ty > 1450 && ty < 2250) continue;
+                const info = treeVarieties[Math.floor(Math.random() * treeVarieties.length)];
+                const treeEl = document.createElement('div'); treeEl.className = `tree ${info.class}`; treeEl.style.left = `${tx}px`; treeEl.style.top = `${ty}px`; treeEl.innerText = info.icon; world.appendChild(treeEl);
+                entities.trees.push({ x: tx, y: ty, element: treeEl, hp: info.hp, info: info });
+            }
+
+            for (let i = 0; i < 45; i++) {
+                let bx = Math.random() * (worldSize - 400) + 200; let by = Math.random() * (worldSize - 400) + 200;
+                if(bx > 1350 && bx < 2450 && by > 1450 && by < 2250) continue;
+                const bEl = document.createElement('div'); bEl.className = 'tree'; bEl.style.background = 'radial-gradient(circle, #ff2b54, #5c0515)'; bEl.style.borderColor = '#ff2b54'; bEl.style.left = `${bx}px`; bEl.style.top = `${by}px`; bEl.innerText = "🍒"; world.appendChild(bEl);
+                entities.berry_bushes.push({ x: bx, y: by, element: bEl, picked: false });
+            }
+
+            player.x = 2000; player.y = 2000; player.targetX = 2000; player.targetY = 2000;
+            const meEl = document.createElement('div'); meEl.id = 'player-me'; meEl.className = 'player me'; meEl.innerHTML = `🚶‍♂️<div class="player-label">${player.name}</div>`; world.appendChild(meEl);
+        }
+        function initControlListeners() {
+            window.addEventListener('click', (e) => {
+                if(e.target.closest('#ui-hud') || e.target.closest('.action-container') || e.target.closest('#inventory-window') || e.target.closest('.modal-window')) return;
+                executeWalk(e.clientX, e.clientY);
+            });
+            window.addEventListener('touchstart', (e) => {
+                if(e.target.closest('.m-hud-btn') || e.target.closest('button') || e.target.closest('#inventory-window') || e.target.closest('#ui-hud') || e.target.closest('.modal-window')) return;
+                if(e.touches && e.touches.length > 0) { executeWalk(e.touches[0].clientX, e.touches[0].clientY); }
+            }, { passive: true });
+
+            const touchBtn = document.getElementById('m-action-btn');
+            if (touchBtn) {
+                touchBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); triggerSmartAction(); });
+                touchBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
+            }
+            const invBtn = document.getElementById('m-inv-btn');
+            if (invBtn) {
+                invBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
+            }
+        }
+
+        function executeWalk(screenX, screenY) {
+            if(modalOverlay.style.display === 'flex' || document.getElementById('inventory-window').style.display === 'flex') return;
+            player.targetX = player.x + (screenX - window.innerWidth / 2);
+            player.targetY = player.y + (screenY - window.innerHeight / 2);
+            player.isMoving = true;
+            if(isFishing) { isFishing = false; fishIsBiting = false; document.getElementById('action-btn-text').innerText = "ДЕЙСТВИЕ"; addChatMessage("Рыбалка", "Вы смотали леску.", "#888"); }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement === chatInput) { if(e.key === 'Enter') sendChatMessage(); return; }
+            if (e.key.toLowerCase() === 'e' || e.key.toLowerCase() === 'у') { triggerSmartAction(); }
+            if (e.key.toLowerCase() === 'enter') { chatInput.style.display = 'block'; chatInput.focus(); }
+        });
+        function triggerSmartAction() {
+            let interactRadius = 65;
+            let inLakeZone = (player.x > 1400 && player.x < 2400 && player.y > 1500 && player.y < 2200);
+            if(inLakeZone && !isFishing) { player.isMoving = false; player.water = 100; addChatMessage("Выживание", "Вы утолили жажду чистой водой из озера!", "#39aaff"); updateUi(); }
+
+            for(let i=0; i<entities.berry_bushes.length; i++) {
+                let bush = entities.berry_bushes[i];
+                if(Math.hypot(player.x - bush.x, player.y - bush.y) < interactRadius && !bush.picked) {
+                    player.isMoving = false; bush.picked = true; bush.element.style.opacity = '0.2';
+                    inventory.berries += 3; addChatMessage("Сбор", "Вы собрали спелую малину! +3 ягоды 🍒", "#ff2b54");
+                    renderInventory(); return;
+                }
+            }
+
+            for(let i=0; i<entities.npcs.length; i++) {
+                let npc = entities.npcs[i]; if(Math.hypot(player.x - npc.x, player.y - npc.y) < interactRadius) { player.isMoving = false; openNpcDialog(npc.type); return; }
+            }
+
+            for(let i=0; i<entities.trees.length; i++) {
+                let tree = entities.trees[i];
+                if(Math.hypot(player.x - tree.x, player.y - tree.y) < interactRadius && tree.hp > 0) {
+                    player.isMoving = false; if(!weapons.hasAxe) { addChatMessage("Система", "Вам нужен Топор 🪓, чтобы рубить деревья!", "#ff3939"); return; }
+                    tree.hp--; let woodGained = tree.info.reward * 2;
+                    if(tree.info.name === "Клен") { inventory.maple_wood += woodGained; addChatMessage("Рубка", `+${woodGained} кленовой древесины.`, "#ffaa00"); }
+                    else { inventory.wood += woodGained; addChatMessage("Рубка", `+${woodGained} обычной древесины.`, "#a3ffb4"); }
+                    if(tree.hp <= 0) tree.element.style.opacity = '0.15';
+                    renderInventory(); updateUi(); return;
+                }
+            }
+
+            if(inLakeZone) {
+                player.isMoving = false;
+                if(!isFishing) {
+                    isFishing = true; fishIsBiting = false; fishingTimer = Math.random() * 3000 + 2000;
+                    document.getElementById('action-btn-text').innerHTML = "<span style='color:#ffaa00;'>ЖДИ...</span>"; addChatMessage("Рыбалка", "Удочка заброшена в Сибирское озеро...", "#39aaff");
+                } else {
+                    isFishing = false; document.getElementById('action-btn-text').innerText = "ДЕЙСТВИЕ";
+                    if(fishIsBiting) {
+                        fishIsBiting = false; const fishTypes = [{ key: 'fish_crucian', name: 'Карась 🐟', exp: 25 }, { key: 'fish_perch', name: 'Окунь 🐠', exp: 35 }, { key: 'fish_pike', name: 'Щука 🐊', exp: 55 }];
+                        let caught = fishTypes[Math.floor(Math.random() * fishTypes.length)]; inventory[caught.key]++; gainExp(caught.exp); addChatMessage("Улов!", `Вы поймали: [${caught.name}]!`, "#39aaff"); renderInventory();
+                    } else { addChatMessage("Рыбалка", "Вы вытащили пустой крючок!", "#ff3939"); }
+                }
+                return;
+            }
+
+            let angle = Math.atan2(player.targetY - player.y, player.targetX - player.x); if (!player.isMoving) angle = 0;
+            const bEl = document.createElement('div'); bEl.className = 'bullet'; bEl.style.left = `${player.x}px`; bEl.style.top = `${player.y}px`; world.appendChild(bEl);
+            entities.bullets = entities.bullets || [];
+            entities.bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 11, vy: Math.sin(angle) * 11, element: bEl, dist: 0 });
+            if(ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: "shoot", x: player.x, y: player.y, angle: angle })); }
+        }
+        function openNpcDialog(type) {
+            modalOverlay.style.display = 'flex'; const title = document.getElementById('modal-title'); const text = document.getElementById('modal-text'); const choices = document.getElementById('modal-choices'); choices.innerHTML = "";
+            if(type === 'kupec') {
+                title.innerText = "🏪 Лавка Купца Еремея"; text.innerText = `Скупаю кулинарию и редкое сырье. Рубли: ${player.money} руб.`;
+                choices.innerHTML = `<button class="game-btn" onclick="executeTrade('buy_axe')">🪓 Купить Железный Топор — 250 руб</button><button class="game-btn" onclick="executeTrade('buy_knife')">🔪 Купить Охотничий Нож — 200 руб</button><button class="game-btn" onclick="executeTrade('sell_soup_taiga')">🍲 Продать Таёжный Суп из дичи — 180 руб</button><button class="game-btn" onclick="executeTrade('sell_soup_fish')">🥣 Продать Наваристую Уху — 140 руб</button><button class="game-btn" onclick="executeTrade('sell_berries')">🍒 Сдать 10 лесных ягод — Получить 60 руб</button><button class="game-btn" onclick="executeTrade('sell_wood')">🪵 Сдать 10 ед. дерева — Получить 150 руб</button><button class="game-btn" onclick="executeTrade('sell_fish')">🐟 Сдать всю сырую рыбу за рубли</button>`;
+            } else if(type === 'lesnik') {
+                title.innerText = "🧔 Лесник Егор"; if(currentQuestStage === 'stage1') { text.innerText = "Беги на Юго-Запад (координаты 800, 3300) на Блокпост, доложи Капитану Блинову, что мы живы!"; choices.innerHTML = `<button class="game-btn" onclick="progressQuest('stage1')">Принять квест [Связь с блокпостом]</button>`; } else { text.innerText = "Удачи в глуши, сынок."; }
+            } else if(type === 'military') {
+                title.innerText = "🪖 Капитан Блинов"; if(currentQuestStage === 'stage2') { text.innerText = "Сходи к Дому Старейшины на север (координаты 2000, 600), обсуди план эвакуации."; choices.innerHTML = `<button class="game-btn" onclick="progressQuest('stage2')">Принять квест [План мудрецу]</button>`; } else { text.innerText = "Периметр под контролем. Вольно."; }
+            } else if(type === 'znahar') {
+                title.innerText = "🧙‍♂️ Дед Пахом"; if(!znaharQuestActive) { text.innerText = "Принеси мне 5 ед. кленовой древесины 🍁. Я вознагражу тебя опытом!"; choices.innerHTML = `<button class="game-btn" onclick="acceptZnaharQuest()">Взять побочный квест [Кленовый отвар]</button>`; } else { text.innerText = "Принес кленовые ветки 🍁 для отвара?"; choices.innerHTML = `<button class="game-btn" onclick="executeTrade('complete_znahar')">Сдать 5 ед. кленового дерева</button>`; }
+            } else if(type === 'elder') {
+                title.innerText = "👴 Старейшина Наум"; if(currentQuestStage === 'stage3') { text.innerText = "Испытания завершены. Начинается свободная ММО-песочница. Строй базу, лови рыбу и выживай!"; choices.innerHTML = `<button class="game-btn" onclick="progressQuest('stage3')">Вступить в режим ПЕСОЧНИЦЫ</button>`; } else { text.innerText = "Тайга сурова, но справедлива."; }
+            }
+        }
+
+        function closeModal() { modalOverlay.style.display = 'none'; }
+        function acceptZnaharQuest() { znaharQuestActive = true; addChatMessage("Знахарь", "Вы взяли циклическое задание на сбор 5 единиц кленового дерева."); updateQuestUi(); closeModal(); }
+
+        function executeTrade(action) {
+            if(action === 'buy_axe') { if(player.money >= 250) { player.money -= 250; weapons.hasAxe = true; addChatMessage("Купец", "Куплен Железный Топор!", "#ffaa00"); } }
+            else if(action === 'buy_knife') { if(player.money >= 200) { player.money -= 200; weapons.hasKnife = true; player.dmg += 10; addChatMessage("Купец", "Куплен Нож! +10 атаки.", "#ffaa00"); } }
+            else if(action === 'sell_soup_taiga') { if(inventory.taiga_soup >= 1) { inventory.taiga_soup--; player.money += 180; addChatMessage("Купец", "Вы продали наваристый Таёжный суп за 180 руб!", "#ffaa00"); } else alert("У вас нет Таёжного супа!"); }
+            else if(action === 'sell_soup_fish') { if(inventory.fish_soup >= 1) { inventory.fish_soup--; player.money += 140; addChatMessage("Купец", "Вы продали Уху за 140 руб!", "#ffaa00"); } else alert("У вас нет Ухи!"); }
+            else if(action === 'sell_berries') { if(inventory.berries >= 10) { inventory.berries -= 10; player.money += 60; addChatMessage("Купец", "+60 руб за малину."); } else alert("Нужно 10 ягод!"); }
+            else if(action === 'sell_wood') { if(inventory.wood >= 10) { inventory.wood -= 10; player.money += 150; } }
+            else if(action === 'sell_fish') {
+                let payout = (inventory.fish_crucian * 40) + (inventory.fish_perch * 60) + (inventory.fish_pike * 110);
+                if(payout > 0) { player.money += payout; inventory.fish_crucian = 0; inventory.fish_perch = 0; inventory.fish_pike = 0; addChatMessage("Купец", `Продано рыбы на ${payout} руб.`); } else alert("Рыбы нет!");
+            } else if(action === 'complete_znahar') { if(inventory.maple_wood >= 5) { inventory.maple_wood -= 5; znaharQuestActive = false; gainExp(80); } }
+            renderInventory(); updateUi(); closeModal();
+        }
+
+        function progressQuest(stage) {
+            if(stage === 'stage1') currentQuestStage = "stage2"; else if(stage === 'stage2') currentQuestStage = "stage3"; else if(stage === 'stage3') currentQuestStage = "sandbox";
+            updateQuestUi(); closeModal();
+        }
+
+        function toggleInventoryWindow() { const w = document.getElementById('inventory-window'); w.style.display = (w.style.display === 'flex') ? 'none' : 'flex'; }
+        function switchInvTab(tabId, evt) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); evt.target.classList.add('active'); document.getElementById(tabId).classList.add('active'); }
+        function renderInventory() { 
+            document.getElementById('tab-eq').innerHTML = `
+                <div class="inv-row"><span>🪵 Обычное дерево:</span> <span>${inventory.wood}</span></div>
+                <div class="inv-row" style="color:#ffaa00;"><span>🍁 Кленовая древесина:</span> <span>${inventory.maple_wood}</span></div>
+                <div class="inv-row" style="color:#ff2b54;"><span>🍒 Лесная малина:</span> <span>${inventory.berries} ед. <button class="game-btn" style="width:auto; display:inline; padding:2px 5px;" onclick="eatFood('berries')">Съесть (+8 Голод)</button></span></div>
+                <div class="inv-row" style="color:#ff4d4d;"><span>🥩 Сырое мясо дичи:</span> <span>${inventory.raw_meat} ед. <button class="game-btn" style="width:auto; display:inline; padding:2px 5px;" onclick="eatFood('raw_meat')">Съесть (Травля ХП!)</button></span></div>
+                <div class="inv-row" style="color:#ff8c00;"><span>🍖 Жареное мясо:</span> <span>${inventory.cooked_meat} шт. <button class="game-btn" style="width:auto; display:inline; padding:2px 5px;" onclick="eatFood('cooked_meat')">Съесть (+45 Голод, +20 ХП)</button></span></div>
+                <div class="inv-row" style="color:#39aaff;"><span>🐠 Сырая рыба (всего):</span> <span>${inventory.fish_crucian + inventory.fish_perch + inventory.fish_pike} шт.</span></div>
+                <div class="inv-row" style="color:#39ff14;"><span>🐟 Жареная рыба:</span> <span>${inventory.cooked_fish} шт. <button class="game-btn" style="width:auto; display:inline; padding:2px 5px;" onclick="eatFood('cooked_fish')">Съесть (+35 Голод, +15 ХП)</button></span></div>
+                <div class="inv-row" style="color:#00ffff; font-weight:bold; border-top:1px dashed #ffaa00; padding-top:4px;"><span>🍲 Готовый Таёжный суп:</span> <span>${inventory.taiga_soup} шт. <button class="game-btn" style="width:auto; display:inline; padding:2px 5px;" onclick="eatFood('taiga_soup')">Сытость 100%, Полный Хил!</button></span></div>
+                <div class="inv-row" style="color:#00ffff; font-weight:bold;"><span>🥣 Готовая Уха в казане:</span> <span>${inventory.fish_soup} шт. <button class="game-btn" style="width:auto; display:inline; padding:2px 5px;" onclick="eatFood('fish_soup')">Голод +70, ХП +40</button></span></div>
+                <div class="inv-row" style="color:#e066ff;"><span>🥘 Походные казаны:</span> <span>${inventory.kazan} шт.</span></div>
+            `; 
+            
+            let craftTab = document.getElementById('tab-craft');
+            let oldCookSection = document.getElementById('py-cook-section');
+            if(oldCookSection) oldCookSection.remove();
+
+            let cookDiv = document.createElement('div');
+            cookDiv.id = 'py-cook-section';
+            cookDiv.innerHTML = `
+                <div style="margin:10px 0 5px 0; font-size:11px; color:#00ffff; font-weight:bold; border-top:1px solid #39ff14; padding-top:5px;">🥘 КУЛИНАРИЯ И ЖАРКА (СТОЯ У КОСТРА 🔥):</div>
+                <button class="game-btn" onclick="cookFoodOnCampfire('cook_fish')">🍳 Пожарить 1 рыбу (Нужна: 1 сырая рыба)</button>
+                <button class="game-btn" onclick="cookFoodOnCampfire('cook_meat')">🍳 Зажарить стейк (Нужно: 1 сырое мясо)</button>
+                <button class="game-btn" onclick="cookFoodOnCampfire('craft_kazan')">🧱 Сковать Казанок (Требуется: 8 дров)</button>
+                <button class="game-btn" onclick="cookFoodOnCampfire('soup_fish')">🍲 Сварить Уху (Нужен Казан + 2 рыбы + Озеро рядом)</button>
+                <button class="game-btn" onclick="cookFoodOnCampfire('soup_taiga')">🍲 Сварить Таёжный Суп (Казан + 2 Мяса + 3 Ягоды)</button>
+            `;
+            craftTab.appendChild(cookDiv);
+        }
+        function eatFood(type) {
+            if(type === 'berries' && inventory.berries >= 1) { inventory.berries--; player.hunger = Math.min(100, player.hunger + 8); addChatMessage("Еда", "Вы съели горсть ягод малины 🍒", "#ff2b54"); }
+            else if(type === 'raw_meat' && inventory.raw_meat >= 1) { inventory.raw_meat--; player.hunger = Math.min(100, player.hunger + 15); player.hp = Math.max(10, player.hp - 15); addChatMessage("Отрава", "Вы съели СЫРОЕ мясо! Живот скрутило (-15 ХП)", "#ff4d4d"); }
+            else if(type === 'cooked_meat' && inventory.cooked_meat >= 1) { inventory.cooked_meat--; player.hunger = Math.min(100, player.hunger + 45); player.hp = Math.min(player.maxHp, player.hp + 20); addChatMessage("Еда", "Вы съели сочный жареный стейк 🍖", "#ff8c00"); }
+            else if(type === 'cooked_fish' && inventory.cooked_fish >= 1) { inventory.cooked_fish--; player.hunger = Math.min(100, player.hunger + 35); player.hp = Math.min(player.maxHp, player.hp + 15); addChatMessage("Еда", "Вы съели аппетитную жареную рыбку 🐟", "#39ff14"); }
+            else if(type === 'fish_soup' && inventory.fish_soup >= 1) { inventory.fish_soup--; player.hunger = Math.min(100, player.hunger + 70); player.hp = Math.min(player.maxHp, player.hp + 40); inventory.kazan++; addChatMessage("Еда", "Вы съели наваристую уху! Казанок вернулся.", "#00ffff"); }
+            else if(type === 'taiga_soup' && inventory.taiga_soup >= 1) { inventory.taiga_soup--; player.hunger = 100; player.hp = player.maxHp; inventory.kazan++; addChatMessage("Еда", "Мега-суп полностью исцелил вас! Казанок вернулся.", "#00ffff"); }
+            else { alert("Этого продукта нет в наличии!"); return; }
+            savePlayerData(); renderInventory(); updateUi();
+        }
+
+        function cookFoodOnCampfire(recipe) {
+            let nearCampfire = false;
+            for (let key in serverCrafts) {
+                if(serverCrafts[key].type === 'campfire' && Math.hypot(serverCrafts[key].x - player.x, serverCrafts[key].y - player.y) < 100) { nearCampfire = true; break; }
+            }
+            if(!nearCampfire && recipe !== 'craft_kazan') { addChatMessage("Кулинария", "Вы должны стоять вплотную к зажженному костру 🔥!", "#ff3939"); return; }
+
+            if(recipe === 'craft_kazan' && inventory.wood >= 8) { inventory.wood -= 8; inventory.kazan++; addChatMessage("Крафт", "Вы вырезали походный казан из прочного Дуба 🥘", "#e066ff"); }
+            else if(recipe === 'cook_fish') {
+                if(inventory.fish_crucian >= 1) { inventory.fish_crucian--; inventory.cooked_fish++; addChatMessage("Жарка", "Рыба зажарена на углях костра 🐟"); }
+                else if(inventory.fish_perch >= 1) { inventory.fish_perch--; inventory.cooked_fish++; addChatMessage("Жарка", "Рыба зажарена на углях костра 🐟"); }
+                else if(inventory.fish_pike >= 1) { inventory.fish_pike--; inventory.cooked_fish++; addChatMessage("Жарка", "Рыба зажарена на углях костра 🐟"); }
+                else { alert("У вас нет сырой рыбы!"); return; }
+            }
+            else if(recipe === 'cook_meat' && inventory.raw_meat >= 1) { inventory.raw_meat--; inventory.cooked_meat++; addChatMessage("Жарка", "Мясо зажарено на углях костра 🍖"); }
+            else if(recipe === 'soup_fish') {
+                let totalFish = inventory.fish_crucian + inventory.fish_perch + inventory.fish_pike;
+                let nearLake = (player.x > 1400 && player.x < 2400 && player.y > 1500 && player.y < 2200);
+                if(!nearLake) { alert("Вы должны стоять рядом с Сибирским озером, чтобы набрать воду!"); return; }
+                if(inventory.kazan >= 1 && totalFish >= 2) {
+                    inventory.kazan--;
+                    if(inventory.fish_crucian >= 2) inventory.fish_crucian -= 2; else if(inventory.fish_perch >= 2) inventory.fish_perch -= 2; else inventory.fish_pike -= 2;
+                    inventory.fish_soup++; addChatMessage("Суп", "Вы сварили Наваристую Уху у воды 🥣", "#00ffff");
+                } else { alert("Недостаточно ресурсов (Нужен Казан и 2 рыбы)!"); return; }
+            }
+            else if(recipe === 'soup_taiga' && inventory.kazan >= 1 && inventory.raw_meat >= 2 && inventory.berries >= 3) {
+                inventory.kazan--; inventory.raw_meat -= 2; inventory.berries -= 3; inventory.taiga_soup++; addChatMessage("Суп", "Вы сварили легендарный Таёжный Суп из дичи 🍲", "#00ffff");
+            } else { alert("Недостаточно ингредиентов для рецепта!"); return; }
+            savePlayerData(); renderInventory(); updateUi();
+        }
+
+        function craftItemInInv(type) {
+            let cx = player.x + 30, cy = player.y + 5;
+            if(type === 'torch' && inventory.wood >= 3) { inventory.wood -= 3; inventory.torches += 1; sendCraftToServer(cx, cy, 'torch', 'torch-crafted', '🏮'); }
+            else if(type === 'campfire' && inventory.wood >= 10) { inventory.wood -= 10; sendCraftToServer(cx, cy, 'campfire', 'campfire', '🔥'); }
+            else if(type === 'wall' && inventory.wood >= 15) { inventory.wood -= 15; sendCraftToServer(cx, cy, 'wall', 'wall-crafted', '🪵'); }
+            renderInventory(); updateUi();
+        }
+        function sendCraftToServer(x, y, craftType, cssClass, icon) { if(ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: "place_craft", x: x, y: y, craft_type: craftType, cssClass: cssClass, icon: icon })); } else { createCraftedItem(x, y, craftType, cssClass, icon); } }
+        function createCraftedItem(x, y, craftType, cssClass, icon) { const key = `${x}_${y}`; if (!serverCrafts[key]) { const el = document.createElement('div'); el.className = cssClass; el.style.left = `${x}px`; el.style.top = `${y}px`; el.innerText = icon; world.appendChild(el); serverCrafts[key] = { el: el, type: craftType, x: x, y: y }; } }
+
+        function updateQuestUi() {
+            const qEl = document.getElementById('ui-quest'); const qTab = document.getElementById('tab-quests'); let znText = znaharQuestActive ? "<br>[Доп]: Принести 5 Клена Знахарю" : "";
+            if(currentQuestStage === 'stage1') { qEl.innerText = "К Егору"; qTab.innerHTML = "<p style='color:#39ff14; font-weight:bold; margin-bottom:5px;'>📜 Основной квест:</p><p>Поговорите с Лесником Егором.</p>" + znText; }
+            else if(currentQuestStage === 'stage2') { qEl.innerText = "К Блинову"; qTab.innerHTML = "<p style='color:#39ff14; font-weight:bold; margin-bottom:5px;'>📜 Основной квест:</p><p>Идите на Блокпост на Юго-Западе (координаты 800, 3300).</p>" + znText; }
+            else if(currentQuestStage === 'stage3') { qEl.innerText = "К Науму"; qTab.innerHTML = "<p style='color:#39ff14; font-weight:bold; margin-bottom:5px;'>📜 Основной квест:</p><p>Найдите Дом Старейшины Наума на Севере (координаты 2000, 600).</p>" + znText; }
+            else { qEl.innerText = "Песочница!"; qTab.innerHTML = "<p style='color:#39ff14; font-weight:bold; margin-bottom:5px;'>📜 Режим:</p><p>Свободный режим активен. Выживайте!</p>" + znText; }
+        }
+        function savePlayerData() {
+            const dataToSave = { lvl: player.lvl, exp: player.exp, nextLvlExp: player.nextLvlExp, money: player.money, dmg: player.dmg, maxHp: player.maxHp, inventory: inventory, weapons: weapons };
+            localStorage.setItem('taiga_save_' + player.name, JSON.stringify(dataToSave));
+        }
+
+        function loadPlayerData() {
+            const saved = localStorage.getItem('taiga_save_' + player.name);
+            if(saved) {
+                const data = JSON.parse(saved); player.lvl = data.lvl; player.exp = data.exp; player.nextLvlExp = data.nextLvlExp;
+                player.money = data.money; player.dmg = data.dmg; player.maxHp = data.maxHp; player.hp = data.maxHp;
+                Object.assign(inventory, data.inventory); Object.assign(weapons, data.weapons);
+                addChatMessage("Система", "Данные персонажа успешно загружены!", "#ffea00");
+            }
+        }
+
+        function connectToServer() {
+            // ИСПРАВЛЕНО: Привязываем чистый порт 8000 для мгновенного соединения на ПК и в APK!
+            let currentHost = window.location.hostname;
+            
+            if (!currentHost || currentHost === "localhost" || currentHost === "127.0.0.1" || window.location.protocol === "file:") {
+                let userIp = prompt("Введите IP-адрес компьютера для подключения к серверу Тайги:", "192.168.31.207");
+                if (userIp) { currentHost = userIp.trim(); } else { currentHost = "127.0.0.1"; }
+            }
+            
+            // Насильно стучимся на порт 8000
+            let socketUrl = "ws://" + currentHost + ":8000";
+
+            let connectionTimeout = setTimeout(() => {
+                if (!isOnlineMode) {
+                    isOnlineMode = false;
+                    addChatMessage("Система", "Сервер ПК недоступен. Включен автономный режим Тайги 🌲", "#ffaa00");
+                    if(!player.id) { player.id = "local_player"; }
+                }
+            }, 1500);
+
+            try {
+                ws = new WebSocket(socketUrl);
+                ws.onopen = () => { 
+                    clearTimeout(connectionTimeout);
+                    isOnlineMode = true; 
+                    addChatMessage("Сеть", "Успешно подключено к server.py!", "#39ff14"); 
+                    ws.send(JSON.stringify({ type: "join", name: player.name, x: player.x, y: player.y })); 
+                };
+                ws.onmessage = (event) => {
+                    const packet = jsonParseSafe(event.data); if(!packet) return; const type = packet.type;
+                    if (type === "init_world") {
+                        player.id = packet.your_id; packet.players.forEach(p => syncOnlinePlayer(p)); syncServerMonsters(packet.monsters); 
+                        if(packet.crafts) packet.crafts.forEach(c => createCraftedItem(c.x, c.y, c.type, c.css, c.icon)); 
+                        syncServerTime(packet.game_time);
+                    }
+                    else if (type === "player_joined") { syncOnlinePlayer(packet); }
+                    else if (type === "player_moved") { if(otherPlayers[packet.id]) { otherPlayers[packet.id].x = packet.x; otherPlayers[packet.id].y = packet.y; } }
+                    else if (type === "player_left") { if(otherPlayers[packet.id]) { otherPlayers[packet.id].el.remove(); delete otherPlayers[packet.id]; } }
+                    else if (type === "player_shot") { renderRemoteBullet(packet); }
+                    else if (type === "craft_placed") { createCraftedItem(packet.x, packet.y, packet.craft_type, packet.css, packet.icon); }
+                    else if (type === "server_update") { syncServerMonsters(packet.monsters); syncServerTime(packet.game_time); if(packet.crafts) packet.crafts.forEach(c => createCraftedItem(c.x, c.y, c.type, c.css, c.icon)); if(packet.players) packet.players.forEach(p => { if(p.id !== player.id) syncOnlinePlayer(p); }); }
+                    else if (type === "monster_spawned") { spawnRemoteMonster(packet.monster); }
+                    else if (type === "monster_killed") {
+                        if(packet.killer_id === player.id) { inventory.raw_meat += packet.reward > 50 ? 3 : 1; gainExp(40); addChatMessage("Охота", `Убит ${packet.type_name}! Получено сырое мясо 🥩`, "#ff4d4d"); renderInventory(); updateUi(); }
+                        if(serverMonsters[packet.monster_id]) { serverMonsters[packet.monster_id].el.remove(); delete serverMonsters[packet.monster_id]; }
+                    }
+                    else if (type === "chat_message") { addChatMessage(packet.name, packet.text, "#00aaff"); }
+                };
+                ws.onerror = () => { isOnlineMode = false; };
+                ws.onclose = () => { if(isOnlineMode) { isOnlineMode = false; closeModal(); for (let id in otherPlayers) { otherPlayers[id].el.remove(); delete otherPlayers[id]; } } };
+            } catch(e) { isOnlineMode = false; }
+        }
+        function jsonParseSafe(str) { try { return JSON.parse(str); } catch(e) { return null; } }
+
+
+
+        function syncOnlinePlayer(data) { if (!otherPlayers[data.id]) { const el = document.createElement('div'); el.className = 'player other'; el.innerHTML = `🤠<div class="player-label">${data.name}</div>`; world.appendChild(el); otherPlayers[data.id] = { id: data.id, name: data.name, x: data.x, y: data.y, el: el }; } else { otherPlayers[data.id].x = data.x; otherPlayers[data.id].y = data.y; } }
+        function syncServerMonsters(list) { if(!list) return; for (let id in serverMonsters) { if (!list.some(m => m.id == id)) { serverMonsters[id].el.remove(); delete serverMonsters[id]; } } list.forEach(m => { if(!serverMonsters[m.id]) { const el = document.createElement('div'); el.className = 'player monster'; el.innerHTML = `${m.icon}<div class="player-label" style="color:#ff3939;">${m.type} [${m.hp}HP]</div>`; world.appendChild(el); serverMonsters[m.id] = { id: m.id, x: m.x, y: m.y, el: el }; } else { let sm = serverMonsters[m.id]; sm.x = m.x; sm.y = m.y; sm.el.innerHTML = `${m.icon}<div class="player-label" style="color:#ff3939;">${m.type} [${m.hp}HP]</div>`; sm.el.style.left = `${m.x}px`; sm.el.style.top = `${m.y}px`; } }); }
+        function renderRemoteBullet(data) { const bEl = document.createElement('div'); bEl.className = 'bullet'; bEl.style.left = `${data.x}px`; bEl.style.top = `${data.y}px`; world.appendChild(bEl); entities.bullets.push({ x: data.x, y: data.y, vx: Math.cos(data.angle)*11, vy: Math.sin(data.angle)*11, element: bEl, dist: 0 }); }
+        function spawnRemoteMonster(m) { syncServerMonsters([m]); }
+        function syncServerTime(time) { gameTime = time; let hour = Math.floor(time / 60); let min = Math.floor(time % 60).toString().padStart(2, '0'); document.getElementById('time-display').innerText = `Время: ${hour}:${min}`; nightOverlay.style.background = (hour >= 21 || hour < 5) ? "rgba(0, 0, 40, 0.73)" : "rgba(0,0,0,0)"; }
+        function gainExp(amount) { player.exp += amount; if(player.exp >= player.nextLvlExp) { player.exp -= player.nextLvlExp; player.lvl++; player.maxHp += 15; player.hp = player.maxHp; player.dmg += 3; player.nextLvlExp = Math.floor(player.nextLvlExp * 1.3); } savePlayerData(); }
+
+        function updateUi() {
+            document.getElementById('ui-lvl').innerText = `Ур. ${player.lvl}`; document.getElementById('ui-hp').innerText = `${Math.floor(player.hp)}/${player.maxHp}`;
+            document.getElementById('ui-money').innerText = `${player.money} руб.`; document.getElementById('ui-lvl-fill').style.width = `${(player.exp / player.nextLvlExp) * 100}%`;
+            document.getElementById('ui-water-fill').style.width = `${player.water}%`; document.getElementById('ui-water-text').innerText = `${Math.floor(player.water)}%`; document.getElementById('ui-dmg-text').innerText = player.dmg;
+            let hFill = document.getElementById('ui-hunger-fill'); let hText = document.getElementById('ui-hunger-text'); if(hFill && hText) { hFill.style.width = `${player.hunger}%`; hText.innerText = `${Math.floor(player.hunger)}%`; }
+        }
+        function gameLoop() {
+            if (player.isMoving) {
+                let dist = Math.hypot(player.targetX - player.x, player.targetY - player.y);
+                if (dist > speed) {
+                    let angle = Math.atan2(player.targetY - player.y, player.targetX - player.x); player.x += Math.cos(angle) * speed; player.y += Math.sin(angle) * speed;
+                    if(ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: "move", x: player.x, y: player.y })); }
+                } else { player.x = player.targetX; player.y = player.targetY; player.isMoving = false; }
+            }
+            if(isFishing && fishingTimer > 0) { fishingTimer -= 16; if(fishingTimer <= 0 && !fishIsBiting) { fishIsBiting = true; document.getElementById('action-btn-text').innerHTML = "<span style='color:#39ff14;'>КЛЮЕТ! 🔥</span>"; } }
+            if(player.water > 0) { player.water -= 0.015; } else { player.hp -= 0.05; }
+            if(player.hunger > 0) { player.hunger -= 0.012; } else { player.hp -= 0.06; }
+            updateUi();
+
+            const meEl = document.getElementById('player-me'); if(meEl) { meEl.style.left = `${player.x}px`; meEl.style.top = `${player.y}px`; }
+            for (let id in otherPlayers) { let p = otherPlayers[id]; p.el.style.left = `${p.x}px`; p.el.style.top = `${p.y}px`; }
+
+            for (let i = entities.bullets.length - 1; i >= 0; i--) {
+                let b = entities.bullets[i]; b.x += b.vx; b.y += b.vy; b.dist += Math.hypot(b.vx, b.vy); b.element.style.left = `${b.x}px`; b.element.style.top = `${b.y}px`;
+                if(isOnlineMode) {
+                    for(let id in serverMonsters) {
+                        let m = serverMonsters[id]; if(Math.hypot(b.x - m.x, b.y - m.y) < 25) { b.dist = 9999; if(ws && ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: "hit_monster", monster_id: m.id, damage: player.dmg })); } break; }
+                    }
+                } else {
+                    for(let j = offlineMonsters.length - 1; j >= 0; j--) {
+                        let m = offlineMonsters[j]; if(Math.hypot(b.x - m.x, b.y - m.y) < 25) { b.dist = 9999; m.hp -= player.dmg; if(m.hp <= 0) { m.element.remove(); offlineMonsters.splice(j, 1); inventory.raw_meat += m.type === 'Медведь' ? 3 : 1; gainExp(35); renderInventory(); updateUi(); } break; }
+                    }
+                }
+                if(b.dist > 600) { b.element.remove(); entities.bullets.splice(i, 1); }
+            }
+
+            if(!isOnlineMode) {
+                gameTime = (gameTime + 0.25) % 1440;
+                let hour = Math.floor(gameTime / 60); let min = Math.floor(gameTime % 60).toString().padStart(2, '0');
+                document.getElementById('time-display').innerText = `Время: ${hour}:${min}`;
+                let isOfflineNight = (hour >= 21 || hour < 5);
+                if(isOfflineNight) {
+                    nightOverlay.style.background = "rgba(0, 0, 40, 0.73)";
+                    if(offlineMonsters.length < 5 && Math.random() < 0.012) {
+                        const angle = Math.random() * Math.PI * 2; const dist = Math.random() * 200 + 300;
+                        const mx = player.x + Math.cos(angle) * dist, my = player.y + Math.sin(angle) * dist;
+                        const isBear = Math.random() > 0.8; const type = isBear ? 'Медведь' : 'Волк'; const icon = isBear ? '🐻' : '🐺';
+                        const mEl = document.createElement('div'); mEl.className = 'player monster'; mEl.style.left = `${mx}px`; mEl.style.top = `${my}px`; mEl.innerHTML = `${icon}`; world.appendChild(mEl);
+                        offlineMonsters.push({ x: mx, y: my, hp: isBear ? 120 : 45, type: type, speed: isBear ? 1.4 : 2.5, reward: isBear ? 100 : 40, element: mEl });
+                    }
+                } else { nightOverlay.style.background = "rgba(0,0,0,0)"; }
+
+                offlineMonsters.forEach(m => {
+                    let scare = false;
+                    for (let key in serverCrafts) {
+                        let c = serverCrafts[key]; if(c.type === 'campfire' && Math.hypot(c.x - m.x, c.y - m.y) < 130) { scare = true; let escapeAngle = Math.atan2(m.y - c.y, m.x - c.x); m.x += Math.cos(escapeAngle) * (m.speed * 1.5); m.y += Math.sin(escapeAngle) * (m.speed * 1.5); break; }
+                    }
+                    if(!scare) { let dToP = Math.hypot(player.x - m.x, player.y - m.y); if(dToP < 350) { let angle = Math.atan2(player.y - m.y, player.x - m.x); m.x += Math.cos(angle) * m.speed; m.y += Math.sin(angle) * m.speed; } }
+                    m.element.style.left = `${m.x}px`; m.element.style.top = `${m.y}px`;
+                });
+            }
+
+            const activeMonsters = isOnlineMode ? serverMonsters : offlineMonsters;
+            for (let id in activeMonsters) {
+                let m = activeMonsters[id];
+                if (Math.hypot(player.x - m.x, player.y - m.y) < 22) {
+                    player.hp -= 0.4; updateUi();
+                    if (player.hp <= 0) {
+                        alert("Вы погибли!"); player.hp = player.maxHp; player.water = 100; player.hunger = 100; player.x = 2000; player.y = 2000; player.targetX = 2000; player.targetY = 2000; player.isMoving = false;
+                        inventory.wood = Math.floor(inventory.wood / 2); savePlayerData(); renderInventory(); updateUi();
+                    }
+                }
+            }
+            
+            world.style.left = `${window.innerWidth / 2 - player.x}px`;
+            world.style.top = `${window.innerHeight / 2 - player.y}px`;
+            requestAnimationFrame(gameLoop);
+        }
+        
+        window.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'i' || e.key.toLowerCase() === 'ш') { toggleInventoryWindow(); } });
+        function addChatMessage(author, text, color = "#fff") { const msg = document.createElement('div'); msg.innerHTML = `<span style="color: ${color}; font-weight:bold;">[${author}]:</span> ${text}`; chatMessages.appendChild(msg); chatMessages.scrollTop = chatMessages.scrollHeight; }
+        updateUi();
+    </script>
+</body>
+</html>
